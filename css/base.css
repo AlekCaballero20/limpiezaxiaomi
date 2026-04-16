@@ -1,0 +1,136 @@
+/* ─────────────────────────────────────────────
+   BASE CSS — Musicala Style (Light Mode)
+   Reset + tipografía + comportamiento global
+───────────────────────────────────────────── */
+
+/* RESET SUAVE */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* HTML & BODY */
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  font-family: var(--ff-primary);
+  background: var(--bg-main);
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* SELECCIÓN */
+::selection {
+  background: var(--primary-soft);
+  color: var(--primary-strong);
+}
+
+/* SCROLLBAR (sutil y elegante) */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(120, 90, 255, 0.2);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(120, 90, 255, 0.35);
+}
+
+/* TIPOGRAFÍA BASE */
+h1, h2, h3, h4, h5 {
+  font-family: var(--ff-primary);
+  color: var(--text-strong);
+  letter-spacing: -0.3px;
+}
+
+h1 { font-size: 1.4rem; font-weight: 800; }
+h2 { font-size: 1.2rem; font-weight: 700; }
+h3 { font-size: 1rem;  font-weight: 700; }
+
+p {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-soft);
+}
+
+/* LINKS */
+a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+a:hover {
+  opacity: 0.75;
+}
+
+/* BOTONES BASE */
+button {
+  font-family: var(--ff-primary);
+  border: none;
+  outline: none;
+  cursor: pointer;
+  background: none;
+}
+
+/* INPUTS BASE */
+input, select, textarea {
+  font-family: var(--ff-primary);
+  border: none;
+  outline: none;
+  background: none;
+}
+
+/* PLACEHOLDER */
+::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+/* IMÁGENES */
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* LISTAS */
+ul, ol {
+  list-style: none;
+}
+
+/* UTILIDADES BÁSICAS */
+.hidden {
+  display: none !important;
+}
+
+.flex {
+  display: flex;
+}
+
+.grid {
+  display: grid;
+}
+
+.center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* TRANSICIONES SUAVES GLOBALES */
+* {
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}

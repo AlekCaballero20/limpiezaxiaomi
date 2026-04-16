@@ -1,0 +1,125 @@
+/* ─────────────────────────────────────────────
+   TOKENS CSS — Musicala Design System
+   Colores, tipografías, radios, sombras
+───────────────────────────────────────────── */
+
+:root {
+
+  /* ==============================
+     BACKGROUNDS
+  ============================== */
+  --bg-main: #f6f4ff;
+  --bg-soft: #fcfbff;
+
+  /* ==============================
+     SURFACES (cards, inputs)
+  ============================== */
+  --surface: rgba(255, 255, 255, 0.88);
+  --surface-soft: #ffffff;
+  --surface-muted: #f1edff;
+
+  /* ==============================
+     BORDERS
+  ============================== */
+  --border-soft: rgba(120, 90, 255, 0.12);
+  --border-strong: rgba(120, 90, 255, 0.22);
+
+  /* ==============================
+     TEXT
+  ============================== */
+  --text-main: #2b2344;
+  --text-strong: #21183b;
+  --text-soft: #5f5679;
+  --text-muted: #8a82a8;
+
+  /* ==============================
+     PRIMARY (Musicala core)
+  ============================== */
+  --primary: #7a5cff;
+  --primary-strong: #6544f5;
+  --primary-soft: #efeaff;
+  --primary-ultrasoft: #f6f2ff;
+  --primary-border: rgba(122, 92, 255, 0.28);
+
+  /* ==============================
+     SECONDARY / ACCENTS
+  ============================== */
+  --secondary: #ff7fd1;
+  --accent: #8ce2ff;
+
+  /* ==============================
+     STATUS COLORS
+  ============================== */
+  --success: #27b06e;
+  --success-soft: #e9fff3;
+  --success-border: rgba(39, 176, 110, 0.3);
+
+  --warning: #f59e0b;
+  --warning-soft: #fff7e6;
+  --warning-border: rgba(245, 158, 11, 0.3);
+
+  --danger: #df4f69;
+  --danger-soft: #ffe9ee;
+  --danger-border: rgba(223, 79, 105, 0.3);
+
+  --neutral-soft: #f3f2f8;
+
+  /* ==============================
+     STATUS LEGACY (compatibilidad)
+  ============================== */
+  --fresh: #27b06e;
+  --ok: #eab308;
+  --warn: #f97316;
+  --urgent: #ef4444;
+  --never: #cfcde4;
+
+  /* ==============================
+     FOCUS
+  ============================== */
+  --focus-ring: rgba(122, 92, 255, 0.18);
+
+  /* ==============================
+     TYPOGRAPHY
+  ============================== */
+  --ff-primary: 'Syne', sans-serif;
+  --ff-mono: 'Space Mono', monospace;
+
+  /* ==============================
+     RADIUS
+  ============================== */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+
+  /* ==============================
+     SHADOWS
+  ============================== */
+  --shadow-xs: 0 2px 6px rgba(90, 70, 160, 0.06);
+  --shadow-sm: 0 6px 16px rgba(90, 70, 160, 0.08);
+  --shadow-md: 0 12px 28px rgba(90, 70, 160, 0.12);
+  --shadow-lg: 0 20px 40px rgba(90, 70, 160, 0.16);
+
+  /* ==============================
+     GRADIENTS
+  ============================== */
+  --grad-primary: linear-gradient(
+    135deg,
+    var(--primary),
+    var(--secondary)
+  );
+
+  --grad-soft: linear-gradient(
+    135deg,
+    rgba(122, 92, 255, 0.12),
+    rgba(255, 127, 209, 0.08),
+    rgba(140, 226, 255, 0.08)
+  );
+
+  --grad-glow: radial-gradient(
+    circle at top left,
+    rgba(122, 92, 255, 0.25),
+    transparent 40%
+  );
+
+}

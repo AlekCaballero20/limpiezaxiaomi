@@ -1,0 +1,270 @@
+/* ─────────────────────────────────────────────
+   PAGES CSS — Musicala Tracker
+   Estilos específicos por página / vista
+───────────────────────────────────────────── */
+
+
+/* ==============================
+   DASHBOARD
+============================== */
+#tab-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Loading del dashboard */
+#dash-load {
+  border-radius: var(--radius-xl);
+}
+
+/* Estado principal */
+#dash-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Card de siguiente en limpiar */
+#next-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Grid de zonas */
+#zone-grid {
+  margin-top: 6px;
+}
+
+/* Legend refinado */
+#map-legend {
+  margin-bottom: 10px;
+}
+
+/* Micro mejora visual */
+#tab-dashboard .card {
+  position: relative;
+  overflow: hidden;
+}
+
+#tab-dashboard .card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    rgba(124, 106, 245, 0.05),
+    rgba(0, 212, 170, 0.04),
+    transparent
+  );
+  pointer-events: none;
+}
+
+
+/* ==============================
+   REGISTRAR
+============================== */
+#tab-registrar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Card del formulario */
+#tab-registrar .card {
+  max-width: 620px;
+  margin: 0 auto;
+}
+
+/* Mejora visual del botón */
+#save-btn {
+  margin-top: 6px;
+}
+
+/* Zona de checks */
+#zones-group {
+  animation: fadeIn 0.2s ease;
+}
+
+/* Inputs con mejor spacing */
+#tab-registrar .form-group:last-of-type {
+  margin-bottom: 20px;
+}
+
+
+/* ==============================
+   HISTORIAL
+============================== */
+#tab-historial {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Loader */
+#hist-load {
+  border-radius: var(--radius-xl);
+}
+
+/* Contenedor */
+#hist-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Animación de entrada */
+#hist-body .sess {
+  animation: fadeUp 0.25s ease;
+}
+
+/* Mejora visual hover */
+#hist-body .sess:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Botón eliminar más suave */
+.btn-del {
+  transition: all 0.15s ease;
+}
+
+
+/* ==============================
+   ESTADÍSTICAS
+============================== */
+#tab-estadisticas {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Loader */
+#stats-load {
+  border-radius: var(--radius-xl);
+}
+
+/* Contenido */
+#stats-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Cards animadas */
+#stats-body .card {
+  animation: fadeUp 0.25s ease;
+}
+
+/* Barras más suaves */
+.bar-fill {
+  transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+
+/* ==============================
+   EMPTY STATES (mejorados)
+============================== */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  background: linear-gradient(
+    135deg,
+    rgba(124, 106, 245, 0.06),
+    rgba(236, 72, 153, 0.05)
+  );
+
+  border-style: dashed;
+}
+
+.empty-icon {
+  opacity: 0.8;
+}
+
+.empty-txt {
+  max-width: 260px;
+}
+
+
+/* ==============================
+   TOAST OVERRIDE
+============================== */
+.toast {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+
+/* ==============================
+   MICRO INTERACCIONES
+============================== */
+button:active {
+  transform: scale(0.97);
+}
+
+.card:active {
+  transform: scale(0.995);
+}
+
+
+/* ==============================
+   ANIMACIONES
+============================== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* ==============================
+   RESPONSIVE
+============================== */
+@media (max-width: 768px) {
+
+  #tab-registrar .card {
+    max-width: 100%;
+  }
+
+  #tab-dashboard,
+  #tab-historial,
+  #tab-estadisticas {
+    gap: 16px;
+  }
+
+}
+
+@media (max-width: 480px) {
+
+  #dash-body,
+  #stats-body,
+  #hist-body {
+    gap: 14px;
+  }
+
+  .card {
+    padding: 16px;
+  }
+
+}
