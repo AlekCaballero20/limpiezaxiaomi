@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tracker de Limpieza | Musicala</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="./css/tokens.css" />
+  <link rel="stylesheet" href="./css/base.css" />
+  <link rel="stylesheet" href="./css/layout.css" />
+  <link rel="stylesheet" href="./css/components.css" />
+  <link rel="stylesheet" href="./css/pages.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="header-inner">
+        <div class="header-row">
+          <div class="header-brand">
+            <div class="logo">
+              <img src="./logo.png" alt="Musicala" />
+            </div>
+
+            <div class="brand-copy">
+              <div class="brand-title">
+                <h1>Tracker de Limpieza</h1>
+                <span class="brand-slash">/</span>
+                <span class="brand-subtle">Morchis</span>
+              </div>
+              <p class="brand-subtext">
+                Control de limpieza por mapas, zonas y seguimiento de espacios pendientes.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="tabs-wrap">
+          <nav class="tabs-nav" aria-label="Navegación principal">
+            <button class="tab active" data-tab="dashboard"    type="button">Dashboard</button>
+            <button class="tab"        data-tab="registrar"    type="button">Registrar</button>
+            <button class="tab"        data-tab="historial"    type="button">Historial</button>
+            <button class="tab"        data-tab="estadisticas" type="button">Estadísticas</button>
+            <button class="tab"        data-tab="mantenimiento" type="button">🔧 Mantenimiento</button>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <!-- DASHBOARD -->
+      <section id="tab-dashboard" class="page active" aria-labelledby="dashboard-title">
+        <div id="dash-load" class="loading">
+          Cargando datos
+          <span class="spin"></span>
+        </div>
+
+        <div id="dash-body" style="display: none;">
+          <div class="page-stack">
+            <div class="stat-row" id="q-stats"></div>
+
+            <div class="card">
+              <div class="card-label">📋 Siguiente en limpiar</div>
+              <div id="next-list" class="next-list"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-label">🗺️ Estado de todas las zonas</div>
+              <div id="map-legend" class="map-legend"></div>
+              <div id="zone-grid" class="zone-grid"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- REGISTRAR -->
+      <section id="tab-registrar" class="page" aria-labelledby="registrar-title">
+        <div class="page-stack">
+          <div class="card">
+            <div class="card-label">📝 Nueva sesión de limpieza</div>
+
+            <div class="form-layout">
+              <div class="form-group">
+                <label for="map-select">Mapa ejecutado</label>
+                <select id="map-select">
+                  <option value="">Seleccionar mapa...</option>
+                </select>
+              </div>
+
+              <div class="form-group" id="zones-group" style="display: none;">
+                <label>
+                  Zonas incluidas
+                </label>
+                <p class="field-help">
+                  Desmarca las zonas que no se hayan cubierto en esta sesión.
+                </p>
+                <div id="zone-checks" class="zone-checks"></div>
+              </div>
+
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label for="date-input">Fecha y hora</label>
+                  <input type="datetime-local" id="date-input" />
+                </div>
+
+                <div class="form-group">
+                  <label for="dur-input">Duración en minutos</label>
+                  <input
+                    type="number"
+                    id="dur-input"
+                    placeholder="Ej. 45"
+                    min="1"
+                    max="480"
+                  />
+                </div>
+              </div>
+
+              <!-- CONFIGURACIÓN XIAOMI -->
+              <div class="xiaomi-section">
+                <div class="xiaomi-section-title">
+                  <span class="xiaomi-icon">🤖</span>
+                  Configuración Xiaomi
+                </div>
+
+                <div class="form-grid-2">
+                  <div class="form-group">
+                    <label for="xiaomi-succion">Modo de succión</label>
+                    <select id="xiaomi-succion">
+                      <option value="">Sin especificar</option>
+                      <option value="silencioso">Silencioso</option>
+                      <option value="estandar">Estándar</option>
+                      <option value="medio">Medio</option>
+                      <option value="turbo">Turbo</option>
+                      <option value="max">MAX</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="xiaomi-agua">Salida de agua (mopa)</label>
+                    <select id="xiaomi-agua">
+                      <option value="">Sin especificar</option>
+                      <option value="apagada">Apagada</option>
+                      <option value="baja">Baja</option>
+                      <option value="media">Media</option>
+                      <option value="alta">Alta</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="xiaomi-fregado">Modo fregado</label>
+                    <select id="xiaomi-fregado">
+                      <option value="">Sin especificar</option>
+                      <option value="normal">Normal</option>
+                      <option value="intensivo">Intensivo</option>
+                      <option value="desactivado">Desactivado</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="xiaomi-trayectoria">Trayectoria</label>
+                    <select id="xiaomi-trayectoria">
+                      <option value="">Sin especificar</option>
+                      <option value="automatica">Automática</option>
+                      <option value="bow">Bow (ida y vuelta)</option>
+                      <option value="zigzag">Zigzag</option>
+                      <option value="espiral">Espiral</option>
+                      <option value="punto-a-punto">Punto a punto</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="xiaomi-veces">Número de pasadas</label>
+                  <select id="xiaomi-veces">
+                    <option value="">Sin especificar</option>
+                    <option value="1">1 pasada</option>
+                    <option value="2">2 pasadas</option>
+                    <option value="3">3 pasadas</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="notes-input">Notas</label>
+                <textarea
+                  id="notes-input"
+                  placeholder="Incidencias, observaciones o detalles de la limpieza..."
+                ></textarea>
+              </div>
+
+              <div class="form-actions">
+                <button id="save-btn" class="btn-primary" type="button">
+                  Guardar sesión
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- HISTORIAL -->
+      <section id="tab-historial" class="page" aria-labelledby="historial-title">
+        <div id="hist-load" class="loading">
+          Cargando historial
+          <span class="spin"></span>
+        </div>
+
+        <div id="hist-body" style="display: none;"></div>
+      </section>
+
+      <!-- ESTADÍSTICAS -->
+      <section id="tab-estadisticas" class="page" aria-labelledby="estadisticas-title">
+        <div id="stats-load" class="loading">
+          Calculando estadísticas
+          <span class="spin"></span>
+        </div>
+
+        <div id="stats-body" style="display: none;"></div>
+      </section>
+
+      <!-- MANTENIMIENTO -->
+      <section id="tab-mantenimiento" class="page" aria-labelledby="mantenimiento-title">
+        <div id="maint-load" class="loading">
+          Cargando mantenimiento
+          <span class="spin"></span>
+        </div>
+
+        <div id="maint-body" style="display: none;"></div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
