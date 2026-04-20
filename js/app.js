@@ -58,11 +58,11 @@ function hideAllLoaders() {
 /* ==============================
    RENDER GLOBAL
 ============================== */
-export function renderApp() {
+export async function renderApp() {
   renderDashboardView();
   renderHistoryView();
   renderStatsView();
-  renderMaintenanceView();
+  await renderMaintenanceView();
 }
 
 /* ==============================
@@ -82,7 +82,7 @@ async function initApp() {
     showInitialLoadingState();
 
     setupTabs();
-    setupRegisterView();
+    await setupRegisterView();
 
     await bootstrapSessions();
 
@@ -91,7 +91,7 @@ async function initApp() {
     setLoading("stats", false);
     setLoading("maintenance", false);
 
-    renderApp();
+    await renderApp();
     hideAllLoaders();
 
   } catch (error) {
