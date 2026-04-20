@@ -7,9 +7,7 @@ import {
   MAINTENANCE_GROUPS,
   getMaintenanceRecords,
   markItemDone,
-  clearItemRecord,
-  daysSinceISO,
-  getItemStatus
+  daysSinceISO
 } from "../services/maintenance.service.js";
 
 /* ==============================
@@ -138,14 +136,14 @@ function renderMaintenanceSummary(records) {
 /* ==============================
    RENDER PRINCIPAL
 ============================== */
-export function renderMaintenanceView() {
+export async function renderMaintenanceView() {
   const { load, body } = getMaintenanceElements();
   hide(load);
   show(body);
 
   if (!body) return;
 
-  const records = getMaintenanceRecords();
+  const records = await getMaintenanceRecords();
 
   const summaryHtml = renderMaintenanceSummary(records);
   const groupsHtml = MAINTENANCE_GROUPS
@@ -170,12 +168,12 @@ export function renderMaintenanceView() {
 ============================== */
 function setupMaintenanceEvents(container) {
   container.querySelectorAll(".maint-btn-done").forEach(btn => {
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", async () => {
       const itemId = btn.dataset.itemId;
       if (!itemId) return;
 
-      markItemDone(itemId);
-      renderMaintenanceView();
+      await markItemDone(itemId);
+      await renderMaintenanceView();
     });
   });
 }
