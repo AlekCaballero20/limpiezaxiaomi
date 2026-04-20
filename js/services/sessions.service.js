@@ -4,4 +4,11 @@
    CRUD de sesiones en Firestore
 ───────────────────────────────────────────── */
 
-export { loadSessions, saveSession, deleteSession } from "./sessions.services.js";
+export {
+  loadSessions,
+  saveSession,
+  deleteSession,
+  loadActiveSession,
+  saveActiveSession,
+  clearActiveSession
+} from "./sessions.services.js";

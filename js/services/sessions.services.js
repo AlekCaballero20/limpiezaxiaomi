@@ -2,21 +2,30 @@ import {
   collection,
   addDoc,
   getDocs,
+  getDoc,
+  setDoc,
   deleteDoc,
   doc,
   query,
-  orderBy
+  orderBy,
+  Timestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import { db } from "../config/firebase.config.js";
 
 const COLLECTION_NAME = "sessions";
+const APP_STATE_COLLECTION = "app_state";
+const ACTIVE_SESSION_DOC_ID = "active_session";
 
 /* ==============================
    HELPERS INTERNOS
 ============================== */
 function getSessionsCollection() {
   return collection(db, COLLECTION_NAME);
+}
+
+function getActiveSessionRef() {
+  return doc(db, APP_STATE_COLLECTION, ACTIVE_SESSION_DOC_ID);
 }
 
 /* ==============================
@@ -56,4 +65,26 @@ export async function deleteSession(sessionId) {
   await deleteDoc(sessionRef);
 
   return sessionId;
+}
+
+/* ==============================
+   ACTIVE SESSION (SHARED)
+============================== */
+export async function loadActiveSession() {
+  const snapshot = await getDoc(getActiveSessionRef());
+  if (!snapshot.exists()) return null;
+  return snapshot.data();
+}
+
+export async function saveActiveSession(activeSessionData) {
+  await setDoc(getActiveSessionRef(), {
+    ...activeSessionData,
+    updatedAt: Timestamp.now()
+  });
+
+  return activeSessionData;
+}
+
+export async function clearActiveSession() {
+  await deleteDoc(getActiveSessionRef());
 }
