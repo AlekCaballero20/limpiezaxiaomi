@@ -34,7 +34,7 @@
                 <span class="brand-slash">/</span>
                 <span class="brand-subtle">Morchis</span>
               </div>
-              <p class="brand-subtext">
+              <p class="brand-subtext brand-subtext--hide-mobile">
                 Control de limpieza por mapas, zonas y seguimiento de espacios pendientes.
               </p>
             </div>
@@ -43,10 +43,10 @@
 
         <div class="tabs-wrap">
           <nav class="tabs-nav" aria-label="Navegación principal">
-            <button class="tab active" data-tab="dashboard"    type="button">Dashboard</button>
-            <button class="tab"        data-tab="registrar"    type="button">Registrar</button>
-            <button class="tab"        data-tab="historial"    type="button">Historial</button>
-            <button class="tab"        data-tab="estadisticas" type="button">Estadísticas</button>
+            <button class="tab active" data-tab="dashboard"     type="button">Dashboard</button>
+            <button class="tab"        data-tab="registrar"     type="button">Registrar</button>
+            <button class="tab"        data-tab="historial"     type="button">Historial</button>
+            <button class="tab"        data-tab="estadisticas"  type="button">Estadísticas</button>
             <button class="tab"        data-tab="mantenimiento" type="button">🔧 Mantenimiento</button>
           </nav>
         </div>
@@ -82,6 +82,16 @@
       <!-- REGISTRAR -->
       <section id="tab-registrar" class="page" aria-labelledby="registrar-title">
         <div class="page-stack">
+
+          <!-- Banner: sesión en curso (oculto por defecto) -->
+          <div id="session-active-banner" class="session-active-banner" style="display:none;">
+            <div class="session-active-dot-pulse"></div>
+            <div class="session-active-info">
+              <div class="session-active-title">🧹 Limpieza en curso</div>
+              <div id="session-active-timer" class="session-active-timer">Calculando tiempo…</div>
+            </div>
+          </div>
+
           <div class="card">
             <div class="card-label">📝 Nueva sesión de limpieza</div>
 
@@ -94,31 +104,11 @@
               </div>
 
               <div class="form-group" id="zones-group" style="display: none;">
-                <label>
-                  Zonas incluidas
-                </label>
+                <label>Zonas incluidas</label>
                 <p class="field-help">
                   Desmarca las zonas que no se hayan cubierto en esta sesión.
                 </p>
                 <div id="zone-checks" class="zone-checks"></div>
-              </div>
-
-              <div class="form-grid-2">
-                <div class="form-group">
-                  <label for="date-input">Fecha y hora</label>
-                  <input type="datetime-local" id="date-input" />
-                </div>
-
-                <div class="form-group">
-                  <label for="dur-input">Duración en minutos</label>
-                  <input
-                    type="number"
-                    id="dur-input"
-                    placeholder="Ej. 45"
-                    min="1"
-                    max="480"
-                  />
-                </div>
               </div>
 
               <!-- CONFIGURACIÓN XIAOMI -->
@@ -130,35 +120,34 @@
 
                 <div class="form-grid-2">
                   <div class="form-group">
-                    <label for="xiaomi-succion">Modo de succión</label>
+                    <label for="xiaomi-modo">Modo</label>
+                    <select id="xiaomi-modo">
+                      <option value="">Sin especificar</option>
+                      <option value="aspirar">Aspirar</option>
+                      <option value="aspirar-fregar">Aspirar y fregar</option>
+                      <option value="aspirar-antes-fregar">Aspirar antes de fregar</option>
+                      <option value="fregar">Fregar</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="xiaomi-succion">Succión</label>
                     <select id="xiaomi-succion">
                       <option value="">Sin especificar</option>
                       <option value="silencioso">Silencioso</option>
                       <option value="estandar">Estándar</option>
-                      <option value="medio">Medio</option>
+                      <option value="fuerte">Fuerte</option>
                       <option value="turbo">Turbo</option>
-                      <option value="max">MAX</option>
                     </select>
                   </div>
 
                   <div class="form-group">
-                    <label for="xiaomi-agua">Salida de agua (mopa)</label>
+                    <label for="xiaomi-agua">Salida agua fregado</label>
                     <select id="xiaomi-agua">
                       <option value="">Sin especificar</option>
-                      <option value="apagada">Apagada</option>
-                      <option value="baja">Baja</option>
-                      <option value="media">Media</option>
-                      <option value="alta">Alta</option>
-                    </select>
-                  </div>
-
-                  <div class="form-group">
-                    <label for="xiaomi-fregado">Modo fregado</label>
-                    <select id="xiaomi-fregado">
-                      <option value="">Sin especificar</option>
-                      <option value="normal">Normal</option>
-                      <option value="intensivo">Intensivo</option>
-                      <option value="desactivado">Desactivado</option>
+                      <option value="nivel1">Nivel 1</option>
+                      <option value="nivel2">Nivel 2</option>
+                      <option value="nivel3">Nivel 3</option>
                     </select>
                   </div>
 
@@ -166,22 +155,19 @@
                     <label for="xiaomi-trayectoria">Trayectoria</label>
                     <select id="xiaomi-trayectoria">
                       <option value="">Sin especificar</option>
-                      <option value="automatica">Automática</option>
-                      <option value="bow">Bow (ida y vuelta)</option>
-                      <option value="zigzag">Zigzag</option>
-                      <option value="espiral">Espiral</option>
-                      <option value="punto-a-punto">Punto a punto</option>
+                      <option value="rapido">Rápido</option>
+                      <option value="estandar">Estándar</option>
+                      <option value="profundo">Profundo</option>
                     </select>
                   </div>
                 </div>
 
                 <div class="form-group">
-                  <label for="xiaomi-veces">Número de pasadas</label>
+                  <label for="xiaomi-veces">Veces</label>
                   <select id="xiaomi-veces">
                     <option value="">Sin especificar</option>
-                    <option value="1">1 pasada</option>
-                    <option value="2">2 pasadas</option>
-                    <option value="3">3 pasadas</option>
+                    <option value="1">1 vez</option>
+                    <option value="2">2 veces</option>
                   </select>
                 </div>
               </div>
@@ -194,11 +180,39 @@
                 ></textarea>
               </div>
 
+              <!-- Fecha y duración: solo visibles al finalizar -->
+              <div class="form-grid-2 finish-only-fields" id="finish-fields" style="display:none;">
+                <div class="form-group">
+                  <label for="date-input">Fecha y hora de fin</label>
+                  <input type="datetime-local" id="date-input" />
+                </div>
+
+                <div class="form-group">
+                  <label for="dur-input">Duración (minutos)</label>
+                  <input
+                    type="number"
+                    id="dur-input"
+                    placeholder="Calculado automáticamente"
+                    min="1"
+                    max="480"
+                  />
+                </div>
+              </div>
+
               <div class="form-actions">
-                <button id="save-btn" class="btn-primary" type="button">
-                  Guardar sesión
+                <!-- Estado IDLE: solo iniciar -->
+                <button id="start-btn" class="btn-primary" type="button">
+                  ▶&nbsp; Iniciar limpieza
+                </button>
+                <!-- Estado ACTIVO: finalizar o cancelar -->
+                <button id="finish-btn" class="btn-primary btn-finish" type="button" style="display:none;">
+                  ✅&nbsp; Finalizar sesión
+                </button>
+                <button id="cancel-draft-btn" class="btn-secondary btn-cancel-draft" type="button" style="display:none;">
+                  ✕ Cancelar sesión
                 </button>
               </div>
+
             </div>
           </div>
         </div>
