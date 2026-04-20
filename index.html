@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>Tracker de Limpieza | Musicala</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -12,11 +15,26 @@
     rel="stylesheet"
   />
 
-  <link rel="stylesheet" href="./css/tokens.css" />
-  <link rel="stylesheet" href="./css/base.css" />
-  <link rel="stylesheet" href="./css/layout.css" />
-  <link rel="stylesheet" href="./css/components.css" />
-  <link rel="stylesheet" href="./css/pages.css" />
+  <script>
+    window.APP_BUILD_VERSION = "2026-04-20-1";
+    (function forceVersionRefresh() {
+      try {
+        const url = new URL(window.location.href);
+        if (url.searchParams.get("v") !== window.APP_BUILD_VERSION) {
+          url.searchParams.set("v", window.APP_BUILD_VERSION);
+          window.location.replace(url.toString());
+        }
+      } catch (error) {
+        console.error("No se pudo forzar refresh de version:", error);
+      }
+    })();
+  </script>
+
+  <link rel="stylesheet" href="./css/tokens.css?v=2026-04-20-1" />
+  <link rel="stylesheet" href="./css/base.css?v=2026-04-20-1" />
+  <link rel="stylesheet" href="./css/layout.css?v=2026-04-20-1" />
+  <link rel="stylesheet" href="./css/components.css?v=2026-04-20-1" />
+  <link rel="stylesheet" href="./css/pages.css?v=2026-04-20-1" />
 </head>
 <body>
   <div class="app-shell">
@@ -252,6 +270,6 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-  <script type="module" src="./js/app.js"></script>
+  <script type="module" src="./js/app.js?v=2026-04-20-1"></script>
 </body>
 </html>
