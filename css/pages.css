@@ -13,36 +13,30 @@
   gap: 20px;
 }
 
-/* Loading del dashboard */
 #dash-load {
   border-radius: var(--radius-xl);
 }
 
-/* Estado principal */
 #dash-body {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-/* Card de siguiente en limpiar */
 #next-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-/* Grid de zonas */
 #zone-grid {
   margin-top: 6px;
 }
 
-/* Legend refinado */
 #map-legend {
   margin-bottom: 10px;
 }
 
-/* Micro mejora visual */
 #tab-dashboard .card {
   position: relative;
   overflow: hidden;
@@ -68,28 +62,134 @@
 #tab-registrar {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
-/* Card del formulario */
 #tab-registrar .card {
   max-width: 620px;
   margin: 0 auto;
+  width: 100%;
 }
 
-/* Mejora visual del botón */
-#save-btn {
-  margin-top: 6px;
-}
-
-/* Zona de checks */
 #zones-group {
   animation: fadeIn 0.2s ease;
 }
 
-/* Inputs con mejor spacing */
 #tab-registrar .form-group:last-of-type {
-  margin-bottom: 20px;
+  margin-bottom: 4px;
+}
+
+/* ==============================
+   BANNER SESIÓN EN CURSO
+============================== */
+.session-active-banner {
+  max-width: 620px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: linear-gradient(
+    135deg,
+    rgba(39, 176, 110, 0.12),
+    rgba(39, 176, 110, 0.06)
+  );
+  border: 1.5px solid rgba(39, 176, 110, 0.35);
+  border-radius: var(--radius-xl);
+  padding: 14px 18px;
+  box-shadow: 0 4px 16px rgba(39, 176, 110, 0.10);
+}
+
+/* Punto animado */
+.session-active-dot-pulse {
+  width: 14px;
+  height: 14px;
+  min-width: 14px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 0 0 rgba(39, 176, 110, 0.5);
+  animation: pulse-dot 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%   { box-shadow: 0 0 0 0 rgba(39, 176, 110, 0.5); }
+  70%  { box-shadow: 0 0 0 8px rgba(39, 176, 110, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(39, 176, 110, 0); }
+}
+
+.session-active-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.session-active-title {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--success);
+  line-height: 1.2;
+}
+
+.session-active-timer {
+  font-family: var(--ff-mono);
+  font-size: 0.78rem;
+  color: var(--text-soft);
+  line-height: 1.2;
+}
+
+/* ==============================
+   SECCIÓN XIAOMI
+============================== */
+.xiaomi-section {
+  background: var(--primary-ultrasoft);
+  border: 1px solid var(--primary-border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+}
+
+.xiaomi-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--primary-strong);
+  margin-bottom: 14px;
+}
+
+.xiaomi-icon {
+  font-size: 1rem;
+}
+
+.xiaomi-section .form-group {
+  margin-bottom: 14px;
+}
+
+.xiaomi-section .form-group:last-child {
+  margin-bottom: 0;
+}
+
+/* ==============================
+   BOTÓN CANCELAR SESIÓN
+============================== */
+.btn-cancel-draft {
+  border-color: var(--danger-border) !important;
+  color: var(--danger) !important;
+}
+
+.btn-cancel-draft:hover {
+  background: var(--danger-soft) !important;
+}
+
+/* Botón finalizar: verde */
+.btn-finish {
+  background: linear-gradient(135deg, #27b06e, #1f8f59) !important;
+}
+
+.btn-finish:hover {
+  box-shadow: 0 8px 20px rgba(39, 176, 110, 0.3) !important;
 }
 
 
@@ -102,30 +202,25 @@
   gap: 20px;
 }
 
-/* Loader */
 #hist-load {
   border-radius: var(--radius-xl);
 }
 
-/* Contenedor */
 #hist-body {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-/* Animación de entrada */
 #hist-body .sess {
   animation: fadeUp 0.25s ease;
 }
 
-/* Mejora visual hover */
 #hist-body .sess:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-sm);
 }
 
-/* Botón eliminar más suave */
 .btn-del {
   transition: all 0.15s ease;
 }
@@ -140,31 +235,27 @@
   gap: 20px;
 }
 
-/* Loader */
 #stats-load {
   border-radius: var(--radius-xl);
 }
 
-/* Contenido */
 #stats-body {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-/* Cards animadas */
 #stats-body .card {
   animation: fadeUp 0.25s ease;
 }
 
-/* Barras más suaves */
 .bar-fill {
   transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 
 /* ==============================
-   EMPTY STATES (mejorados)
+   EMPTY STATES
 ============================== */
 .empty {
   display: flex;
@@ -242,8 +333,11 @@ button:active {
    RESPONSIVE
 ============================== */
 @media (max-width: 768px) {
-
   #tab-registrar .card {
+    max-width: 100%;
+  }
+
+  .session-active-banner {
     max-width: 100%;
   }
 
@@ -252,11 +346,9 @@ button:active {
   #tab-estadisticas {
     gap: 16px;
   }
-
 }
 
 @media (max-width: 480px) {
-
   #dash-body,
   #stats-body,
   #hist-body {
@@ -267,4 +359,7 @@ button:active {
     padding: 16px;
   }
 
+  .xiaomi-section {
+    padding: 14px;
+  }
 }

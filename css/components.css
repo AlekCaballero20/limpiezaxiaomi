@@ -37,12 +37,12 @@
 }
 
 .tab {
-  padding: 10px 14px;
+  padding: 8px 12px;
   border-radius: 999px;
   background: transparent;
   border: 1px solid transparent;
   color: var(--text-soft);
-  font-size: 0.84rem;
+  font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
 }
@@ -783,18 +783,24 @@ textarea {
   }
 }
 
+@media (max-width: 560px) {
+  .tab {
+    padding: 7px 10px;
+    font-size: 0.78rem;
+  }
+}
+
 @media (max-width: 420px) {
   .zone-grid {
     grid-template-columns: 1fr;
   }
 
   .tabs-nav {
-    gap: 6px;
+    gap: 5px;
   }
 
   .tab {
-    width: 100%;
-    justify-content: center;
-    text-align: center;
+    padding: 6px 9px;
+    font-size: 0.76rem;
   }
 }
