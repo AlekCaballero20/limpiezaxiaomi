@@ -6,7 +6,12 @@
 import { getSessions } from "../state/store.js";
 import { ALL_ZONES, MAPS } from "../config/maps.config.js";
 import { renderNextItem, renderZoneCard, renderStatBox } from "../ui/cards.js";
-import { getRankedMapsByUrgency, getLastCleanedForZone, getZonesWithoutData } from "../utils/zones.js";
+import {
+  getCleaningHealthSummary,
+  getCleaningRecommendations,
+  getLastCleanedForZone,
+  getZonesWithoutData
+} from "../utils/zones.js";
 import { daysSince } from "../utils/dates.js";
 
 /* ==============================
@@ -47,15 +52,18 @@ function renderQuickStats(statsElement, sessions) {
   }).length;
 
   const noDataCount = getZonesWithoutData(sessions).length;
+  const health = getCleaningHealthSummary(sessions);
 
   statsElement.innerHTML = [
-    renderStatBox(totalSessions, "Sesiones totales", "var(--primary)"),
-    renderStatBox(sessionsThisWeek, "Esta semana", "var(--secondary)"),
+    renderStatBox(health.cleanedToday, "Zonas hoy", "var(--success)"),
+    renderStatBox(`${health.freshnessPercent}%`, "Frescura", "var(--primary)"),
     renderStatBox(
-      noDataCount,
-      "Sin registros",
-      noDataCount > 0 ? "var(--danger)" : "var(--success)"
-    )
+      health.attentionZones || noDataCount,
+      "Por atender",
+      health.attentionZones > 0 || noDataCount > 0 ? "var(--danger)" : "var(--success)"
+    ),
+    renderStatBox(sessionsThisWeek, "Esta semana", "var(--secondary)"),
+    renderStatBox(totalSessions, "Sesiones", "var(--text-muted)")
   ].join("");
 }
 
@@ -65,9 +73,9 @@ function renderQuickStats(statsElement, sessions) {
 function renderNextToClean(nextListElement, sessions) {
   if (!nextListElement) return;
 
-  const rankedMaps = getRankedMapsByUrgency(sessions);
+  const recommendations = getCleaningRecommendations(sessions);
 
-  nextListElement.innerHTML = rankedMaps
+  nextListElement.innerHTML = recommendations.topMaps
     .map((map, index) => renderNextItem(map, index, map.days))
     .join("");
 }

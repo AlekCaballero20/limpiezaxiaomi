@@ -10,6 +10,7 @@ import {
 import { addSession, setSelectedMapId, getSelectedMapId } from "../state/store.js";
 import { toastSuccess, toastError, toastWarning } from "../ui/toast.js";
 import { switchTab } from "../ui/tabs.js";
+import { getWeeklyCleaningMode } from "../utils/zones.js";
 import { renderDashboardView } from "./dashboard.view.js";
 import { renderHistoryView } from "./history.view.js";
 import { renderStatsView } from "./stats.view.js";
@@ -115,8 +116,16 @@ export async function setupRegisterView() {
     restoreDraftToForm(draft);
     updateSessionUI(draft);
   } else {
+    applyWeeklyXiaomiDefaults();
     updateSessionUI(null);
   }
+}
+
+function applyWeeklyXiaomiDefaults() {
+  const plan = getWeeklyCleaningMode();
+  const hasValue = ["xiaomi-modo", "xiaomi-succion", "xiaomi-agua", "xiaomi-trayectoria", "xiaomi-veces"]
+    .some(id => document.getElementById(id)?.value);
+  if (!hasValue) setXiaomiValues(plan.xiaomi);
 }
 
 function populateMapSelect(selectElement) {
