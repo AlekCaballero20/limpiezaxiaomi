@@ -24,7 +24,10 @@ export function daysSince(dateValue) {
   const date = tsToDate(dateValue);
   if (!date) return null;
 
-  const diffMs = Date.now() - date.getTime();
+  const today = new Date();
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const dateStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const diffMs = todayStart.getTime() - dateStart.getTime();
   return Math.floor(diffMs / 86400000);
 }
 
