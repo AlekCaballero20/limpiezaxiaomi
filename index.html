@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
@@ -16,7 +16,7 @@
   />
 
   <script>
-    window.APP_BUILD_VERSION = "2026-04-20-1";
+    window.APP_BUILD_VERSION = "2026-04-26-4";
     (function forceVersionRefresh() {
       try {
         const url = new URL(window.location.href);
@@ -30,11 +30,11 @@
     })();
   </script>
 
-  <link rel="stylesheet" href="./css/tokens.css?v=2026-04-20-1" />
-  <link rel="stylesheet" href="./css/base.css?v=2026-04-20-1" />
-  <link rel="stylesheet" href="./css/layout.css?v=2026-04-20-1" />
-  <link rel="stylesheet" href="./css/components.css?v=2026-04-20-1" />
-  <link rel="stylesheet" href="./css/pages.css?v=2026-04-20-1" />
+  <link rel="stylesheet" href="./css/tokens.css?v=2026-04-26-4" />
+  <link rel="stylesheet" href="./css/base.css?v=2026-04-26-4" />
+  <link rel="stylesheet" href="./css/layout.css?v=2026-04-26-4" />
+  <link rel="stylesheet" href="./css/components.css?v=2026-04-26-4" />
+  <link rel="stylesheet" href="./css/pages.css?v=2026-04-26-4" />
 </head>
 <body>
   <div class="app-shell">
@@ -60,12 +60,12 @@
         </div>
 
         <div class="tabs-wrap">
-          <nav class="tabs-nav" aria-label="Navegación principal">
-            <button class="tab active" data-tab="dashboard"     type="button">Dashboard</button>
-            <button class="tab"        data-tab="registrar"     type="button">Registrar</button>
-            <button class="tab"        data-tab="historial"     type="button">Historial</button>
-            <button class="tab"        data-tab="estadisticas"  type="button">Estadísticas</button>
-            <button class="tab"        data-tab="mantenimiento" type="button">🔧 Mantenimiento</button>
+          <nav class="tabs-nav" aria-label="Navegacion principal">
+            <button class="tab active tab-main" data-tab="dashboard" type="button"><span class="tab-icon">?</span><span class="tab-copy"><span class="tab-title">Sugerencias</span><span class="tab-sub">Estado y siguiente</span></span></button>
+            <button class="tab" data-tab="registrar" type="button"><span class="tab-icon">+</span><span class="tab-copy"><span class="tab-title">Registrar</span><span class="tab-sub">Nueva limpieza</span></span></button>
+            <button class="tab" data-tab="historial" type="button"><span class="tab-icon">H</span><span class="tab-copy"><span class="tab-title">Historial</span><span class="tab-sub">Lo hecho</span></span></button>
+            <button class="tab" data-tab="estadisticas" type="button"><span class="tab-icon">%</span><span class="tab-copy"><span class="tab-title">Analisis</span><span class="tab-sub">Frescura y ciclos</span></span></button>
+            <button class="tab" data-tab="mantenimiento" type="button"><span class="tab-icon">*</span><span class="tab-copy"><span class="tab-title">Cuidado</span><span class="tab-sub">Aspiradora</span></span></button>
           </nav>
         </div>
       </div>
@@ -84,12 +84,12 @@
             <div class="stat-row" id="q-stats"></div>
 
             <div class="card">
-              <div class="card-label">📋 Siguiente en limpiar</div>
+              <div class="card-label">Sugerencias para decidir</div>
               <div id="next-list" class="next-list"></div>
             </div>
 
             <div class="card">
-              <div class="card-label">🗺️ Estado de todas las zonas</div>
+              <div class="card-label">Estado de todas las zonas</div>
               <div id="map-legend" class="map-legend"></div>
               <div id="zone-grid" class="zone-grid"></div>
             </div>
@@ -101,17 +101,17 @@
       <section id="tab-registrar" class="page" aria-labelledby="registrar-title">
         <div class="page-stack">
 
-          <!-- Banner: sesión en curso (oculto por defecto) -->
+          <!-- Banner: sesion en curso (oculto por defecto) -->
           <div id="session-active-banner" class="session-active-banner" style="display:none;">
             <div class="session-active-dot-pulse"></div>
             <div class="session-active-info">
-              <div class="session-active-title">🧹 Limpieza en curso</div>
-              <div id="session-active-timer" class="session-active-timer">Calculando tiempo…</div>
+              <div class="session-active-title">Limpieza en curso</div>
+              <div id="session-active-timer" class="session-active-timer">Calculando tiempo...</div>
             </div>
           </div>
 
           <div class="card">
-            <div class="card-label">📝 Nueva sesión de limpieza</div>
+            <div class="card-label">Nueva sesion de limpieza</div>
 
             <div class="form-layout">
               <div class="form-group">
@@ -124,16 +124,16 @@
               <div class="form-group" id="zones-group" style="display: none;">
                 <label>Zonas incluidas</label>
                 <p class="field-help">
-                  Desmarca las zonas que no se hayan cubierto en esta sesión.
+                  Desmarca las zonas que no se hayan cubierto en esta sesion.
                 </p>
                 <div id="zone-checks" class="zone-checks"></div>
               </div>
 
-              <!-- CONFIGURACIÓN XIAOMI -->
+              <!-- CONFIGURACION XIAOMI -->
               <div class="xiaomi-section">
                 <div class="xiaomi-section-title">
-                  <span class="xiaomi-icon">🤖</span>
-                  Configuración Xiaomi
+                  <span class="xiaomi-icon">X</span>
+                  Configuracion Xiaomi
                 </div>
 
                 <div class="form-grid-2">
@@ -149,11 +149,11 @@
                   </div>
 
                   <div class="form-group">
-                    <label for="xiaomi-succion">Succión</label>
+                    <label for="xiaomi-succion">Succion</label>
                     <select id="xiaomi-succion">
                       <option value="">Sin especificar</option>
                       <option value="silencioso">Silencioso</option>
-                      <option value="estandar">Estándar</option>
+                      <option value="estandar">Estandar</option>
                       <option value="fuerte">Fuerte</option>
                       <option value="turbo">Turbo</option>
                     </select>
@@ -173,8 +173,8 @@
                     <label for="xiaomi-trayectoria">Trayectoria</label>
                     <select id="xiaomi-trayectoria">
                       <option value="">Sin especificar</option>
-                      <option value="rapido">Rápido</option>
-                      <option value="estandar">Estándar</option>
+                      <option value="rapido">Rapido</option>
+                      <option value="estandar">Estandar</option>
                       <option value="profundo">Profundo</option>
                     </select>
                   </div>
@@ -198,7 +198,7 @@
                 ></textarea>
               </div>
 
-              <!-- Fecha y duración: solo visibles al finalizar -->
+              <!-- Fecha y duracion: solo visibles al finalizar -->
               <div class="form-grid-2 finish-only-fields" id="finish-fields" style="display:none;">
                 <div class="form-group">
                   <label for="date-input">Fecha y hora de fin</label>
@@ -206,11 +206,11 @@
                 </div>
 
                 <div class="form-group">
-                  <label for="dur-input">Duración (minutos)</label>
+                  <label for="dur-input">Duracion (minutos)</label>
                   <input
                     type="number"
                     id="dur-input"
-                    placeholder="Calculado automáticamente"
+                    placeholder="Calculado automaticamente"
                     min="1"
                     max="480"
                   />
@@ -220,14 +220,14 @@
               <div class="form-actions">
                 <!-- Estado IDLE: solo iniciar -->
                 <button id="start-btn" class="btn-primary" type="button">
-                  ▶&nbsp; Iniciar limpieza
+                  Iniciar limpieza
                 </button>
                 <!-- Estado ACTIVO: finalizar o cancelar -->
                 <button id="finish-btn" class="btn-primary btn-finish" type="button" style="display:none;">
-                  ✅&nbsp; Finalizar sesión
+                  Finalizar sesion
                 </button>
                 <button id="cancel-draft-btn" class="btn-secondary btn-cancel-draft" type="button" style="display:none;">
-                  ✕ Cancelar sesión
+                  Cancelar sesion
                 </button>
               </div>
 
@@ -246,10 +246,10 @@
         <div id="hist-body" style="display: none;"></div>
       </section>
 
-      <!-- ESTADÍSTICAS -->
+      <!-- ESTADISTICAS -->
       <section id="tab-estadisticas" class="page" aria-labelledby="estadisticas-title">
         <div id="stats-load" class="loading">
-          Calculando estadísticas
+          Calculando estadisticas
           <span class="spin"></span>
         </div>
 
@@ -270,6 +270,6 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-  <script type="module" src="./js/app.js?v=2026-04-20-1"></script>
+  <script type="module" src="./js/app.js?v=2026-04-26-4"></script>
 </body>
 </html>
