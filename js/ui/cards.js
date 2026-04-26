@@ -11,6 +11,13 @@ import { getMapOfZone } from "../config/maps.config.js";
    NEXT ITEM (Siguiente en limpiar)
 ============================== */
 export function renderNextItem(map, index, days) {
+  const zonesText = map.targetZones?.length
+    ? map.targetZones.join(", ")
+    : `${map.zones.length} zona${map.zones.length > 1 ? "s" : ""}`;
+  const xiaomi = map.xiaomi
+    ? `${map.xiaomi.trayectoria || "estandar"} · ${map.xiaomi.succion || "estandar"} · ${map.xiaomi.veces || 1} vez`
+    : "";
+
   return `
     <div class="next-item">
       <div class="next-rank">${index + 1}</div>
@@ -23,8 +30,11 @@ export function renderNextItem(map, index, days) {
         </div>
 
         <div class="next-sub">
-          ${map.zones.length} zona${map.zones.length > 1 ? "s" : ""}
+          ${zonesText}
         </div>
+
+        ${map.planNote ? `<div class="next-plan">${map.planTitle}: ${map.planNote}</div>` : ""}
+        ${xiaomi ? `<div class="next-xiaomi">${xiaomi}</div>` : ""}
       </div>
 
       <div class="next-status" style="color:${statusColor(days)}">
