@@ -6,6 +6,7 @@
 import { statusColor, statusLabel } from "../utils/status.js";
 import { formatDate } from "../utils/dates.js";
 import { getMapOfZone } from "../config/maps.config.js";
+import { getSessionCleaningType, getSessionCycleMeta } from "../utils/cleaning-cycle.js";
 
 /* ==============================
    NEXT ITEM (Siguiente en limpiar)
@@ -82,7 +83,19 @@ export function renderZoneCard(zoneName, days) {
 /* ==============================
    HISTORIAL ITEM
 ============================== */
-export function renderSessionCard(session) {
+export function renderSessionCard(session, sessionsBefore = []) {
+  const inferredMeta = getSessionCycleMeta(session, sessionsBefore);
+  const cleaningType = session.cleaningType || inferredMeta.cleaningType || getSessionCleaningType(session);
+  const countsForCycle = session.countsForCycle ?? inferredMeta.countsForCycle;
+  const source = session.recommendationSource || inferredMeta.recommendationSource;
+  const xiaomi = session.xiaomi || {};
+  const xiaomiText = [
+    xiaomi.modo || "sin modo",
+    xiaomi.succion || "sin succion",
+    xiaomi.trayectoria || "sin trayectoria",
+    `${xiaomi.veces || 1} vez`
+  ].join(" / ");
+
   return `
     <div class="sess">
 
@@ -111,9 +124,16 @@ export function renderSessionCard(session) {
       </div>
 
       <div class="sess-tags">
+        <span class="tag">${cleaningType}</span>
+        <span class="tag">${countsForCycle ? "conto para ciclo" : "no avanzo ciclo"}</span>
+        <span class="tag">${source}</span>
         ${session.zones.map(zone =>
           `<span class="tag">${zone}</span>`
         ).join("")}
+      </div>
+
+      <div class="sess-meta">
+        Xiaomi: ${xiaomiText}
       </div>
 
       ${session.notes
