@@ -7,6 +7,12 @@ import {
 
 import { tsToDate, daysSince } from "./dates.js";
 import { statusPriority } from "./status.js";
+import {
+  getCurrentCycleState,
+  getNextRecommendedByMap,
+  getSessionCleaningType
+} from "./cleaning-cycle.js";
+import { getXiaomiPreset } from "../config/cleaning.config.js";
 
 const ROUTINE_TARGET_DAYS = 2;
 
@@ -29,61 +35,15 @@ function sessionHasZone(session, zoneName) {
   return (session.zones || []).some(zone => normalizeZoneName(zone) === target);
 }
 
-function getSessionMode(session) {
-  const xiaomi = session.xiaomi || {};
-  const trajectory = xiaomi.trayectoria || "";
-  const times = Number(xiaomi.veces || 1);
-  const suction = xiaomi.succion || "";
-
-  if (trajectory === "profundo" || times >= 2 || suction === "turbo") return "profundo";
-  if (trajectory === "rapido" || suction === "silencioso") return "rapido";
-  return "estandar";
-}
-
 export function getWeeklyCleaningMode(date = new Date()) {
-  const day = date.getDay();
-
-  if (day === 0 || day === 1) {
-    return {
-      mode: "profundo",
-      title: "Plan profundo",
-      xiaomi: {
-        modo: "aspirar-fregar",
-        succion: "turbo",
-        agua: "nivel3",
-        trayectoria: "profundo",
-        veces: "2"
-      },
-      note: "Inicio de semana: pasada completa para dejar la base limpia."
-    };
-  }
-
-  if (day >= 2 && day <= 4) {
-    return {
-      mode: "estandar",
-      title: "Plan de sostenimiento",
-      xiaomi: {
-        modo: "aspirar",
-        succion: "estandar",
-        agua: "",
-        trayectoria: "estandar",
-        veces: "1"
-      },
-      note: "Mitad de semana: cubrir pendientes sin hacerlo tan pesado."
-    };
-  }
+  const fallbackMode = "profundo";
+  const preset = getXiaomiPreset(fallbackMode);
 
   return {
-    mode: "rapido",
-    title: "Plan rapido",
-    xiaomi: {
-      modo: "aspirar",
-      succion: "fuerte",
-      agua: "",
-      trayectoria: "rapido",
-      veces: "1"
-    },
-    note: "Cierre de semana: pasada corta para no dejar acumular."
+    mode: fallbackMode,
+    title: `Plan ${fallbackMode}`,
+    xiaomi: preset,
+    note: `Compatibilidad: las sugerencias reales ahora se calculan con el ciclo de limpieza. Dia ${date?.getDay?.() ?? ""}.`
   };
 }
 
@@ -187,25 +147,21 @@ export function getRankedZonesByUrgency(sessions = []) {
 }
 
 export function getCleaningRecommendations(sessions = [], date = new Date()) {
-  const weeklyMode = getWeeklyCleaningMode(date);
-  const rankedMaps = getRankedMapsByUrgency(sessions);
+  const cycleState = getCurrentCycleState(sessions, date);
+  const weeklyMode = {
+    mode: cycleState.currentStage.id,
+    title: `Etapa ${cycleState.currentStage.label}`,
+    xiaomi: cycleState.xiaomi,
+    note: cycleState.weekdayNote || cycleState.currentStage.description
+  };
+  const rankedMaps = getNextRecommendedByMap(sessions);
   const rankedZones = getRankedZonesByUrgency(sessions);
-  const candidates = weeklyMode.mode === "profundo"
-    ? rankedMaps
-    : rankedMaps.filter(map => (map.coverage?.overdue || 0) > 0);
 
-  const topMaps = (candidates.length ? candidates : rankedMaps).slice(0, 3).map((map, index) => {
-    const dueZones = weeklyMode.mode === "profundo"
-      ? map.zones
-      : (map.coverage?.overdueZones || [])
-        .sort((a, b) => statusPriority(b.days) - statusPriority(a.days))
-        .slice(0, weeklyMode.mode === "rapido" ? 3 : 5)
-        .map(zone => zone.name);
-
+  const topMaps = rankedMaps.slice(0, 3).map((map, index) => {
     return {
       ...map,
       rank: index + 1,
-      targetZones: dueZones.length ? dueZones : map.zones.slice(0, 2),
+      targetZones: map.targetZones?.length ? map.targetZones : map.zones.slice(0, 2),
       planTitle: weeklyMode.title,
       planNote: weeklyMode.note,
       xiaomi: weeklyMode.xiaomi
@@ -214,6 +170,7 @@ export function getCleaningRecommendations(sessions = [], date = new Date()) {
 
   return {
     weeklyMode,
+    cycleState,
     topMaps,
     topZones: rankedZones.slice(0, 6)
   };
@@ -257,8 +214,8 @@ export function getCleaningHealthSummary(sessions = []) {
   const cleanedToday = zones.filter(zone => zone.days === 0).length;
   const freshZones = zones.filter(zone => zone.days !== null && zone.days <= 2).length;
   const attentionZones = zones.filter(zone => zone.days === null || zone.days >= 5).length;
-  const quickSessions = sessions.filter(session => getSessionMode(session) === "rapido").length;
-  const deepSessions = sessions.filter(session => getSessionMode(session) === "profundo").length;
+  const quickSessions = sessions.filter(session => getSessionCleaningType(session) === "rapido").length;
+  const deepSessions = sessions.filter(session => getSessionCleaningType(session) === "profundo").length;
 
   return {
     cleanedToday,
