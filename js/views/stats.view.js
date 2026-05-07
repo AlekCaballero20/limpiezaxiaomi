@@ -8,6 +8,7 @@ import {
   getMapCoverage,
   getSessionsByZone
 } from "../utils/zones.js";
+import { getCurrentCycleState, getCycleLabel } from "../utils/cleaning-cycle.js";
 import { daysSince, tsToDate } from "../utils/dates.js";
 import { statusColor, statusLabel } from "../utils/status.js";
 
@@ -71,9 +72,13 @@ function getZoneStats(sessions) {
 
 function renderHealthSection(sessions) {
   const health = getCleaningHealthSummary(sessions);
+  const cycle = getCurrentCycleState(sessions);
 
   return `
     <div class="stat-row stat-row-wide">
+      ${renderStatBox(cycle.cycleNumber, "Ciclo actual", "var(--primary)")}
+      ${renderStatBox(cycle.currentStage.label, "Etapa actual", "var(--secondary)")}
+      ${renderStatBox(`${cycle.progress.percent}%`, "Progreso etapa", "var(--success)")}
       ${renderStatBox(health.cleanedToday, "Zonas limpiadas hoy", "var(--success)")}
       ${renderStatBox(`${health.freshnessPercent}%`, "Zonas frescas", "var(--primary)")}
       ${renderStatBox(health.attentionZones, "Zonas por atender", health.attentionZones ? "var(--danger)" : "var(--success)")}
@@ -85,12 +90,14 @@ function renderHealthSection(sessions) {
 
 function renderDecisionSection(sessions) {
   const recommendation = getCleaningRecommendations(sessions);
+  const cycle = getCurrentCycleState(sessions);
   const first = recommendation.topMaps[0];
   if (!first) return "";
 
   return `
     <div class="card decision-card">
       <div class="card-label">Decision sugerida</div>
+      <div class="decision-copy">${getCycleLabel(cycle)} / etapa ${cycle.currentStage.label} / ${cycle.progress.coveredZones.length} de ${cycle.progress.totalZones} zonas cubiertas</div>
       <div class="decision-title">${first.name} - ${first.label}</div>
       <div class="decision-copy">${first.planTitle}: ${first.planNote}</div>
       <div class="decision-tags">

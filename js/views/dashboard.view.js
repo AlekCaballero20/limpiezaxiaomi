@@ -7,6 +7,12 @@ import { getSessions } from "../state/store.js";
 import { ALL_ZONES, MAPS } from "../config/maps.config.js";
 import { renderNextItem, renderZoneCard, renderStatBox } from "../ui/cards.js";
 import {
+  getCurrentCycleState,
+  getNextRecommendedByMap,
+  getNextRecommendedMap,
+  getCycleLabel
+} from "../utils/cleaning-cycle.js";
+import {
   getCleaningHealthSummary,
   getCleaningRecommendations,
   getLastCleanedForZone,
@@ -53,8 +59,11 @@ function renderQuickStats(statsElement, sessions) {
 
   const noDataCount = getZonesWithoutData(sessions).length;
   const health = getCleaningHealthSummary(sessions);
+  const cycle = getCurrentCycleState(sessions);
 
   statsElement.innerHTML = [
+    renderStatBox(cycle.cycleNumber, "Ciclo actual", "var(--primary)"),
+    renderStatBox(cycle.currentStage.label, "Etapa", "var(--secondary)"),
     renderStatBox(health.cleanedToday, "Zonas hoy", "var(--success)"),
     renderStatBox(`${health.freshnessPercent}%`, "Frescura", "var(--primary)"),
     renderStatBox(
@@ -74,10 +83,47 @@ function renderNextToClean(nextListElement, sessions) {
   if (!nextListElement) return;
 
   const recommendations = getCleaningRecommendations(sessions);
+  const cycle = getCurrentCycleState(sessions);
+  const nextGlobal = getNextRecommendedMap(sessions);
+  const byMap = getNextRecommendedByMap(sessions);
+  const pendingMaps = cycle.progress.pendingMaps;
 
-  nextListElement.innerHTML = recommendations.topMaps
+  const cycleSummary = `
+    <div class="cycle-panel">
+      <div class="cycle-head">
+        <div>
+          <div class="cycle-kicker">${getCycleLabel(cycle)}</div>
+          <div class="cycle-title">Etapa actual: ${cycle.currentStage.label}</div>
+        </div>
+        <div class="cycle-percent">${cycle.progress.percent}%</div>
+      </div>
+      <div class="cycle-track"><div class="cycle-fill" style="width:${cycle.progress.percent}%"></div></div>
+      <div class="cycle-copy">${cycle.currentStage.description}</div>
+      <div class="cycle-copy">${cycle.weekdayNote}</div>
+      <div class="cycle-pending">
+        ${pendingMaps.length
+          ? pendingMaps.map(map => `<span class="tag">${map.name}: ${map.pendingZones.length}</span>`).join("")
+          : `<span class="tag">Etapa lista para avanzar</span>`}
+      </div>
+    </div>
+  `;
+
+  const globalSummary = nextGlobal
+    ? `<div class="next-section-title">Siguiente sugerencia global</div>${renderNextItem(nextGlobal, 0, nextGlobal.days)}`
+    : "";
+
+  const byMapSummary = `
+    <div class="next-section-title">Siguiente sugerencia por mapa/piso</div>
+    ${byMap
     .map((map, index) => renderNextItem(map, index, map.days))
-    .join("");
+    .join("")}
+  `;
+
+  nextListElement.innerHTML = `
+    ${cycleSummary}
+    ${globalSummary}
+    ${byMapSummary || recommendations.topMaps.map((map, index) => renderNextItem(map, index, map.days)).join("")}
+  `;
 }
 
 /* ==============================

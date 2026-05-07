@@ -7,10 +7,10 @@ import {
   saveActiveSession,
   clearActiveSession
 } from "../services/sessions.service.js";
-import { addSession, setSelectedMapId, getSelectedMapId } from "../state/store.js";
+import { addSession, getSessions, setSelectedMapId, getSelectedMapId } from "../state/store.js";
 import { toastSuccess, toastError, toastWarning } from "../ui/toast.js";
 import { switchTab } from "../ui/tabs.js";
-import { getWeeklyCleaningMode } from "../utils/zones.js";
+import { getCurrentCycleState, getSessionCycleMeta } from "../utils/cleaning-cycle.js";
 import { renderDashboardView } from "./dashboard.view.js";
 import { renderHistoryView } from "./history.view.js";
 import { renderStatsView } from "./stats.view.js";
@@ -122,7 +122,7 @@ export async function setupRegisterView() {
 }
 
 function applyWeeklyXiaomiDefaults() {
-  const plan = getWeeklyCleaningMode();
+  const plan = getCurrentCycleState(getSessions());
   const hasValue = ["xiaomi-modo", "xiaomi-succion", "xiaomi-agua", "xiaomi-trayectoria", "xiaomi-veces"]
     .some(id => document.getElementById(id)?.value);
   if (!hasValue) setXiaomiValues(plan.xiaomi);
@@ -330,7 +330,7 @@ async function handleFinish() {
       return;
     }
 
-    const newSession = await saveSessionToService({
+    const sessionDraft = {
       mapId: map.id,
       mapName: map.name,
       mapLabel: map.label,
@@ -347,6 +347,12 @@ async function handleFinish() {
         trayectoria: xiaomi.trayectoria || null,
         veces: xiaomi.veces || null
       }
+    };
+
+    const cycleMeta = getSessionCycleMeta(sessionDraft, getSessions());
+    const newSession = await saveSessionToService({
+      ...sessionDraft,
+      ...cycleMeta
     });
 
     addSession(newSession);

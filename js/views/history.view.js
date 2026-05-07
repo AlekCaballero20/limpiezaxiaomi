@@ -9,6 +9,7 @@ import { renderSessionCard, renderEmptyState } from "../ui/cards.js";
 import { toastSuccess, toastError } from "../ui/toast.js";
 import { renderDashboardView } from "./dashboard.view.js";
 import { renderStatsView } from "./stats.view.js";
+import { tsToDate } from "../utils/dates.js";
 
 /* ==============================
    ELEMENTOS DOM
@@ -85,7 +86,15 @@ export function renderHistoryView() {
   }
 
   body.innerHTML = sessions
-    .map(session => renderSessionCard(session))
+    .map(session => {
+      const currentDate = tsToDate(session.completedAt) || tsToDate(session.startedAt) || new Date(0);
+      const sessionsBefore = sessions.filter(candidate => {
+        if (candidate.id === session.id) return false;
+        const candidateDate = tsToDate(candidate.completedAt) || tsToDate(candidate.startedAt) || new Date(0);
+        return candidateDate < currentDate;
+      });
+      return renderSessionCard(session, sessionsBefore);
+    })
     .join("");
 
   setupDeleteButtons(body);
