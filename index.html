@@ -61,11 +61,11 @@
 
         <div class="tabs-wrap">
           <nav class="tabs-nav" aria-label="Navegacion principal">
-            <button class="tab active tab-main" data-tab="dashboard" type="button"><span class="tab-icon">?</span><span class="tab-copy"><span class="tab-title">Sugerencias</span><span class="tab-sub">Estado y siguiente</span></span></button>
-            <button class="tab" data-tab="registrar" type="button"><span class="tab-icon">+</span><span class="tab-copy"><span class="tab-title">Registrar</span><span class="tab-sub">Nueva limpieza</span></span></button>
-            <button class="tab" data-tab="historial" type="button"><span class="tab-icon">H</span><span class="tab-copy"><span class="tab-title">Historial</span><span class="tab-sub">Lo hecho</span></span></button>
-            <button class="tab" data-tab="estadisticas" type="button"><span class="tab-icon">%</span><span class="tab-copy"><span class="tab-title">Analisis</span><span class="tab-sub">Frescura y ciclos</span></span></button>
-            <button class="tab" data-tab="mantenimiento" type="button"><span class="tab-icon">*</span><span class="tab-copy"><span class="tab-title">Cuidado</span><span class="tab-sub">Aspiradora</span></span></button>
+            <button class="tab active tab-main" data-tab="dashboard" type="button" aria-controls="tab-dashboard" aria-selected="true"><span class="tab-icon">?</span><span class="tab-copy"><span class="tab-title">Sugerencias</span><span class="tab-sub">Estado y siguiente</span></span></button>
+            <button class="tab" data-tab="registrar" type="button" aria-controls="tab-registrar" aria-selected="false"><span class="tab-icon">+</span><span class="tab-copy"><span class="tab-title">Registrar</span><span class="tab-sub">Nueva limpieza</span></span></button>
+            <button class="tab" data-tab="historial" type="button" aria-controls="tab-historial" aria-selected="false"><span class="tab-icon">H</span><span class="tab-copy"><span class="tab-title">Historial</span><span class="tab-sub">Lo hecho</span></span></button>
+            <button class="tab" data-tab="estadisticas" type="button" aria-controls="tab-estadisticas" aria-selected="false"><span class="tab-icon">%</span><span class="tab-copy"><span class="tab-title">Analisis</span><span class="tab-sub">Frescura y ciclos</span></span></button>
+            <button class="tab" data-tab="mantenimiento" type="button" aria-controls="tab-mantenimiento" aria-selected="false"><span class="tab-icon">*</span><span class="tab-copy"><span class="tab-title">Cuidado</span><span class="tab-sub">Aspiradora</span></span></button>
           </nav>
         </div>
       </div>
@@ -73,7 +73,7 @@
 
     <main class="app-main">
       <!-- DASHBOARD -->
-      <section id="tab-dashboard" class="page active" aria-labelledby="dashboard-title">
+      <section id="tab-dashboard" class="page active" aria-labelledby="dashboard-title" aria-hidden="false">
         <div id="dash-load" class="loading">
           Cargando datos
           <span class="spin"></span>
@@ -98,7 +98,7 @@
       </section>
 
       <!-- REGISTRAR -->
-      <section id="tab-registrar" class="page" aria-labelledby="registrar-title">
+      <section id="tab-registrar" class="page" aria-labelledby="registrar-title" aria-hidden="true" hidden>
         <div class="page-stack">
 
           <!-- Banner: sesion en curso (oculto por defecto) -->
@@ -237,7 +237,7 @@
       </section>
 
       <!-- HISTORIAL -->
-      <section id="tab-historial" class="page" aria-labelledby="historial-title">
+      <section id="tab-historial" class="page" aria-labelledby="historial-title" aria-hidden="true" hidden>
         <div id="hist-load" class="loading">
           Cargando historial
           <span class="spin"></span>
@@ -247,7 +247,7 @@
       </section>
 
       <!-- ESTADISTICAS -->
-      <section id="tab-estadisticas" class="page" aria-labelledby="estadisticas-title">
+      <section id="tab-estadisticas" class="page" aria-labelledby="estadisticas-title" aria-hidden="true" hidden>
         <div id="stats-load" class="loading">
           Calculando estadisticas
           <span class="spin"></span>
@@ -257,7 +257,7 @@
       </section>
 
       <!-- MANTENIMIENTO -->
-      <section id="tab-mantenimiento" class="page" aria-labelledby="mantenimiento-title">
+      <section id="tab-mantenimiento" class="page" aria-labelledby="mantenimiento-title" aria-hidden="true" hidden>
         <div id="maint-load" class="loading">
           Cargando mantenimiento
           <span class="spin"></span>
