@@ -149,6 +149,10 @@ main,
   display: block;
 }
 
+.page[hidden] {
+  display: none !important;
+}
+
 .page-stack {
   display: flex;
   flex-direction: column;

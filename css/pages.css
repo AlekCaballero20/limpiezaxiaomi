@@ -3,6 +3,54 @@
    Estilos específicos por página / vista
 ───────────────────────────────────────────── */
 
+/* ==============================
+   BASE DE VISTAS
+============================== */
+.view,
+.tab-view,
+#tab-dashboard,
+#tab-registrar,
+#tab-historial,
+#tab-estadisticas,
+#tab-maintenance,
+#tab-mantenimiento,
+#tab-cuidado {
+  width: 100%;
+}
+
+.page-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.page-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.page-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.page-title-row h2,
+.page-title-row h3 {
+  margin: 0;
+  color: var(--text-strong);
+  font-weight: 950;
+  line-height: 1.15;
+}
+
+.page-title-row p {
+  margin: 6px 0 0;
+  color: var(--text-soft);
+  line-height: 1.45;
+  font-size: 0.9rem;
+}
 
 /* ==============================
    DASHBOARD
@@ -23,18 +71,22 @@
   gap: 20px;
 }
 
+#q-stats {
+  position: relative;
+}
+
 #next-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
 }
 
 #zone-grid {
-  margin-top: 6px;
+  margin-top: 8px;
 }
 
 #map-legend {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 #tab-dashboard .card {
@@ -42,19 +94,34 @@
   overflow: hidden;
 }
 
-#tab-dashboard .card::after {
+#tab-dashboard .card::before {
   content: "";
   position: absolute;
   inset: 0;
   background: linear-gradient(
     120deg,
-    rgba(124, 106, 245, 0.05),
-    rgba(0, 212, 170, 0.04),
-    transparent
+    rgba(124, 106, 245, 0.045),
+    rgba(0, 212, 170, 0.035),
+    transparent 68%
   );
   pointer-events: none;
 }
 
+#tab-dashboard .card > * {
+  position: relative;
+  z-index: 1;
+}
+
+#tab-dashboard .next-hero,
+#tab-dashboard .cycle-panel,
+#tab-dashboard .zone-card,
+#tab-dashboard .next-card {
+  animation: fadeUp 0.24s ease;
+}
+
+#tab-dashboard .zone-toolbar {
+  margin-top: 2px;
+}
 
 /* ==============================
    REGISTRAR
@@ -66,9 +133,13 @@
 }
 
 #tab-registrar .card {
-  max-width: 620px;
+  max-width: 680px;
   margin: 0 auto;
   width: 100%;
+}
+
+#tab-registrar .card:first-child {
+  border-color: var(--primary-border);
 }
 
 #zones-group {
@@ -79,11 +150,16 @@
   margin-bottom: 4px;
 }
 
+#tab-registrar .btn-primary,
+#tab-registrar .button-primary {
+  margin-top: 4px;
+}
+
 /* ==============================
    BANNER SESIÓN EN CURSO
 ============================== */
 .session-active-banner {
-  max-width: 620px;
+  max-width: 680px;
   width: 100%;
   margin: 0 auto;
   display: flex;
@@ -97,10 +173,9 @@
   border: 1.5px solid rgba(39, 176, 110, 0.35);
   border-radius: var(--radius-xl);
   padding: 14px 18px;
-  box-shadow: 0 4px 16px rgba(39, 176, 110, 0.10);
+  box-shadow: 0 4px 16px rgba(39, 176, 110, 0.1);
 }
 
-/* Punto animado */
 .session-active-dot-pulse {
   width: 14px;
   height: 14px;
@@ -111,21 +186,16 @@
   animation: pulse-dot 1.6s ease-in-out infinite;
 }
 
-@keyframes pulse-dot {
-  0%   { box-shadow: 0 0 0 0 rgba(39, 176, 110, 0.5); }
-  70%  { box-shadow: 0 0 0 8px rgba(39, 176, 110, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(39, 176, 110, 0); }
-}
-
 .session-active-info {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
 }
 
 .session-active-title {
   font-size: 0.88rem;
-  font-weight: 800;
+  font-weight: 900;
   color: var(--success);
   line-height: 1.2;
 }
@@ -152,7 +222,7 @@
   align-items: center;
   gap: 8px;
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 900;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--primary-strong);
@@ -172,7 +242,7 @@
 }
 
 /* ==============================
-   BOTÓN CANCELAR SESIÓN
+   BOTONES ESPECÍFICOS
 ============================== */
 .btn-cancel-draft {
   border-color: var(--danger-border) !important;
@@ -183,7 +253,6 @@
   background: var(--danger-soft) !important;
 }
 
-/* Botón finalizar: verde */
 .btn-finish {
   background: linear-gradient(135deg, #27b06e, #1f8f59) !important;
 }
@@ -191,7 +260,6 @@
 .btn-finish:hover {
   box-shadow: 0 8px 20px rgba(39, 176, 110, 0.3) !important;
 }
-
 
 /* ==============================
    HISTORIAL
@@ -209,9 +277,12 @@
 #hist-body {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
+#hist-body .history-toolbar,
+#hist-body .history-summary,
+#hist-body .history-day,
 #hist-body .sess {
   animation: fadeUp 0.25s ease;
 }
@@ -221,10 +292,13 @@
   box-shadow: var(--shadow-sm);
 }
 
+#hist-body .empty {
+  margin-top: 4px;
+}
+
 .btn-del {
   transition: all 0.15s ease;
 }
-
 
 /* ==============================
    ESTADÍSTICAS
@@ -249,10 +323,65 @@
   animation: fadeUp 0.25s ease;
 }
 
+#stats-body .card:first-child {
+  border-color: var(--primary-border);
+}
+
 .bar-fill {
   transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+/* ==============================
+   CUIDADO / MANTENIMIENTO
+============================== */
+#tab-maintenance,
+#tab-mantenimiento,
+#tab-cuidado {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+#maint-load {
+  border-radius: var(--radius-xl);
+}
+
+#maint-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+#maint-body .maintenance-hero,
+#maint-body .maint-summary-row,
+#maint-body .maint-priority,
+#maint-body .maint-filter-panel,
+#maint-body .maint-group,
+#maint-body .maint-item {
+  animation: fadeUp 0.25s ease;
+}
+
+#maint-body .maintenance-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+#maint-body .maint-group:last-child {
+  margin-bottom: 0;
+}
+
+#maint-body .maint-filter-panel {
+  position: sticky;
+  top: 8px;
+  z-index: 4;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+#maint-body .empty {
+  margin-top: 0;
+}
 
 /* ==============================
    EMPTY STATES
@@ -274,13 +403,16 @@
 }
 
 .empty-icon {
-  opacity: 0.8;
+  opacity: 0.85;
 }
 
 .empty-txt {
-  max-width: 260px;
+  max-width: 320px;
 }
 
+.empty-detail {
+  max-width: 520px;
+}
 
 /* ==============================
    TOAST OVERRIDE
@@ -290,27 +422,47 @@
   -webkit-backdrop-filter: blur(10px);
 }
 
-
 /* ==============================
    MICRO INTERACCIONES
 ============================== */
 button:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 
 .card:active {
-  transform: scale(0.995);
+  transform: scale(0.998);
 }
 
+.zone-filter:active,
+.maint-filter-btn:active,
+.maint-btn-done:active,
+.history-clear-filters:active {
+  transform: scale(0.97);
+}
 
 /* ==============================
    ANIMACIONES
 ============================== */
+@keyframes pulse-dot {
+  0% {
+    box-shadow: 0 0 0 0 rgba(39, 176, 110, 0.5);
+  }
+
+  70% {
+    box-shadow: 0 0 0 8px rgba(39, 176, 110, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(39, 176, 110, 0);
+  }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
     transform: translateY(4px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -322,16 +474,43 @@ button:active {
     opacity: 0;
     transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
+/* ==============================
+   ACCESIBILIDAD / MOTION
+============================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+  }
+}
 
 /* ==============================
    RESPONSIVE
 ============================== */
+@media (max-width: 1024px) {
+  #dash-body,
+  #stats-body,
+  #hist-body,
+  #maint-body {
+    gap: 16px;
+  }
+
+  #maint-body .maint-filter-panel {
+    position: static;
+  }
+}
+
 @media (max-width: 768px) {
   #tab-registrar .card {
     max-width: 100%;
@@ -343,15 +522,32 @@ button:active {
 
   #tab-dashboard,
   #tab-historial,
-  #tab-estadisticas {
+  #tab-estadisticas,
+  #tab-maintenance,
+  #tab-mantenimiento,
+  #tab-cuidado {
     gap: 16px;
+  }
+
+  .page-title-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .session-active-banner {
+    align-items: flex-start;
+  }
+
+  .xiaomi-section {
+    padding: 15px;
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 560px) {
   #dash-body,
   #stats-body,
-  #hist-body {
+  #hist-body,
+  #maint-body {
     gap: 14px;
   }
 
@@ -361,5 +557,42 @@ button:active {
 
   .xiaomi-section {
     padding: 14px;
+  }
+
+  .session-active-banner {
+    padding: 13px 14px;
+    border-radius: var(--radius-lg);
+  }
+
+  .session-active-dot-pulse {
+    width: 12px;
+    height: 12px;
+    min-width: 12px;
+    margin-top: 2px;
+  }
+
+  #tab-registrar .card {
+    border-radius: var(--radius-lg);
+  }
+}
+
+@media (max-width: 420px) {
+  .page-stack {
+    gap: 14px;
+  }
+
+  .page-section {
+    gap: 12px;
+  }
+
+  #dash-body,
+  #stats-body,
+  #hist-body,
+  #maint-body {
+    gap: 12px;
+  }
+
+  .xiaomi-section-title {
+    align-items: flex-start;
   }
 }
