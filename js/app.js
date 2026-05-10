@@ -10,7 +10,7 @@ import {
   setLoading
 } from "./state/store.js";
 
-import { setupTabs } from "./ui/tabs.js";
+import { renderTabs, setupTabs } from "./ui/tabs.js";
 import { toastError } from "./ui/toast.js";
 
 import { setupRegisterView } from "./views/register.view.js";
@@ -93,6 +93,7 @@ async function initApp() {
 
     await renderApp();
     hideAllLoaders();
+    renderTabs();
 
   } catch (error) {
     console.error("Error inicializando la app:", error);
@@ -100,6 +101,7 @@ async function initApp() {
     toastError("No se pudieron cargar los datos");
 
     hideAllLoaders();
+    renderTabs();
 
     const dashBody = document.getElementById("dash-body");
     const histBody = document.getElementById("hist-body");
