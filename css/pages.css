@@ -441,6 +441,100 @@ button:active {
 }
 
 /* ==============================
+   MATRIZ SEMANAL
+============================== */
+.weekly-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  box-shadow: var(--shadow-soft);
+}
+
+.weekly-panel__head,
+.weekly-summary .weekly-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.weekly-panel__head h2 {
+  margin: 2px 0 0;
+  font-size: 1.2rem;
+}
+
+.weekly-status {
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.weekly-status.is-ready,
+.weekly-chip.is-ready {
+  background: rgba(39, 176, 110, 0.12);
+  color: var(--success);
+}
+
+.weekly-status.is-pending,
+.weekly-chip.is-pending {
+  background: rgba(233, 90, 124, 0.12);
+  color: var(--danger);
+}
+
+.visible-routine-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+}
+
+.visible-zone {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--zone-map-color, var(--primary));
+  border-radius: var(--radius);
+  padding: 10px;
+  background: var(--surface-soft);
+}
+
+.visible-zone strong,
+.visible-zone span {
+  display: block;
+}
+
+.visible-zone span {
+  color: var(--text-muted);
+  font-size: 0.84rem;
+}
+
+.visible-zone.is-ready {
+  border-color: rgba(39, 176, 110, 0.25);
+}
+
+.weekly-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.weekly-chip {
+  border-radius: 999px;
+  padding: 6px 9px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.weekly-chip strong {
+  margin-left: 4px;
+}
+
+/* ==============================
    ANIMACIONES
 ============================== */
 @keyframes pulse-dot {
