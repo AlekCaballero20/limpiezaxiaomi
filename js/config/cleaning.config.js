@@ -152,7 +152,8 @@ export const PRIORITY_DAILY_ZONES = [
   "Recepcion",
   "Corredor lockers",
   "Pasillo 1er piso",
-  "Pasillo 2do piso"
+  "Pasillo 2do piso",
+  "Cafeteria"
 ];
 
 export const PRIORITY_DAILY_ZONE_LABEL = "Zonas visibles de inicio del día";
@@ -260,7 +261,8 @@ export const DAILY_CLEANING_STRATEGIES = {
       "Recepcion",
       "Corredor lockers",
       "Pasillo 1er piso",
-      "Pasillo 2do piso"
+      "Pasillo 2do piso",
+      "Cafeteria"
     ],
     reason: "Pendiente del ciclo",
     note:
