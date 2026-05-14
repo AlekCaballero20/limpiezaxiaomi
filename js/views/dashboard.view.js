@@ -1,42 +1,28 @@
-/* ─────────────────────────────────────────────
-   DASHBOARD VIEW — Musicala Tracker
-   Vista principal: sugerencias, estado y filtros
-───────────────────────────────────────────── */
-
 import { getSessions } from "../state/store.js";
 import { MAPS } from "../config/maps.config.js";
 import { renderStatBox } from "../ui/cards.js";
-
+import { switchTab } from "../ui/tabs.js";
 import {
-  getCurrentCycleState,
-  getNextRecommendedMap,
-  getNextRecommendedByMap,
-  getCycleLabel
-} from "../utils/cleaning-cycle.js";
-
-import {
-  getAllZoneInfo,
-  getAvailableZoneFilters,
-  filterZones,
-  getCleaningHealthSummary,
-  getCoverageSummary,
-  getGeneralCleaningStatus,
-  getCleaningRecommendations,
-  getZoneStatusLabel,
-  getZoneReasonLabel
-} from "../utils/zones.js";
-
-import { daysSince } from "../utils/dates.js";
-
-/* =============================================================================
- * Estado local de la vista
- * ============================================================================= */
+  getDailyVisibleStatus,
+  getNextWeeklyRecommendations,
+  getRecommendedCleaningTypeForZone,
+  getWeeklyZoneLedger
+} from "../utils/weekly-cleaning.js";
 
 let activeZoneFilter = "all";
+let activeSuggestion = null;
 
-/* =============================================================================
- * Elementos DOM
- * ============================================================================= */
+const WEEKLY_FILTERS = [
+  { id: "all", label: "Todos" },
+  { id: "missing-profundo", label: "Falta profundo" },
+  { id: "missing-estandar", label: "Falta estandar" },
+  { id: "missing-rapido", label: "Falta rapido" },
+  { id: "ready", label: "Listos" },
+  { id: "map-1", label: "Mapa 1" },
+  { id: "map-2", label: "Mapa 2" },
+  { id: "map-3", label: "Mapa 3" },
+  { id: "map-4", label: "Mapa 4" }
+];
 
 function getDashboardElements() {
   return {
@@ -48,10 +34,6 @@ function getDashboardElements() {
     zoneGrid: document.getElementById("zone-grid")
   };
 }
-
-/* =============================================================================
- * Helpers básicos
- * ============================================================================= */
 
 function show(element) {
   if (element) element.style.display = "block";
@@ -70,370 +52,203 @@ function esc(value = "") {
     .replaceAll("'", "&#039;");
 }
 
-function toDateLabel(value) {
-  if (!value) return "Sin registro";
-
-  try {
-    return new Intl.DateTimeFormat("es-CO", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric"
-    }).format(value);
-  } catch {
-    return "Sin registro";
-  }
+function formatWeekRange(range) {
+  const fmt = new Intl.DateTimeFormat("es-CO", { day: "2-digit", month: "short" });
+  return `${fmt.format(range.start)} - ${fmt.format(range.end)}`;
 }
-
-function daysText(days) {
-  if (days === null || days === undefined || Number.isNaN(Number(days))) {
-    return "Sin registro";
-  }
-
-  if (days === 0) return "Hoy";
-  if (days === 1) return "Ayer";
-
-  return `Hace ${days}d`;
-}
-
-function getStatusClass(status) {
-  const normalized = String(status || "").toLowerCase();
-
-  if (normalized === "urgent") return "is-urgent";
-  if (normalized === "soon") return "is-soon";
-  if (normalized === "today") return "is-fresh";
-  if (normalized === "never") return "is-never";
-
-  return "is-neutral";
-}
-
-function getReasonClass(reasonId) {
-  const normalized = String(reasonId || "").toLowerCase();
-
-  if (normalized === "prioritydaily") return "is-priority";
-  if (normalized === "dailyplan") return "is-plan";
-  if (normalized === "cyclepending") return "is-cycle";
-  if (normalized === "oldestzone") return "is-oldest";
-
-  return "is-neutral";
-}
-
-/* =============================================================================
- * Stats claras
- * ============================================================================= */
 
 function renderQuickStats(statsElement, sessions) {
   if (!statsElement) return;
 
-  const totalSessions = sessions.length;
-
-  const sessionsThisWeek = sessions.filter(session => {
-    const days = daysSince(session.completedAt || session.startedAt);
-    return days !== null && days <= 7;
-  }).length;
-
-  const health = getCleaningHealthSummary(sessions);
-  const coverage = getCoverageSummary(sessions);
-  const status = getGeneralCleaningStatus(sessions);
-  const cycle = getCurrentCycleState(sessions);
+  const daily = getDailyVisibleStatus(sessions);
+  const weekly = getWeeklyZoneLedger(sessions);
 
   statsElement.innerHTML = [
-    renderStatBox(cycle.cycleNumber, "Ciclo actual", "var(--primary)"),
-    renderStatBox(cycle.currentStage.label, "Etapa", "var(--secondary)"),
-    renderStatBox(`${cycle.progress.percent}%`, "Avance etapa", "var(--primary)"),
-    renderStatBox(`${coverage.freshnessPercent}%`, "Frescura general", "var(--success)"),
-    renderStatBox(coverage.cleanedToday, "Zonas hoy", "var(--success)"),
-    renderStatBox(
-      coverage.pendingZones,
-      "Pendientes",
-      coverage.pendingZones > 0 ? "var(--danger)" : "var(--success)"
-    ),
-    renderStatBox(coverage.zonesWithoutData, "Sin registro", "var(--text-muted)"),
-    renderStatBox(sessionsThisWeek, "Esta semana", "var(--secondary)"),
-    renderStatBox(totalSessions, "Sesiones", "var(--text-muted)")
+    renderStatBox(`${daily.doneCount}/${daily.total}`, "Rutina diaria", daily.completed ? "var(--success)" : "var(--danger)"),
+    renderStatBox(`${weekly.completeCount}/${weekly.totalZones}`, "Zonas listas", weekly.completed ? "var(--success)" : "var(--primary)"),
+    renderStatBox(weekly.pendingCount, "Zonas con deuda", weekly.pendingCount ? "var(--danger)" : "var(--success)"),
+    renderStatBox(formatWeekRange(weekly.week), "Semana", "var(--secondary)"),
+    renderStatBox(sessions.length, "Sesiones", "var(--text-muted)")
   ].join("");
-
-  statsElement.insertAdjacentHTML(
-    "afterend",
-    `
-      <div class="metrics-note" aria-label="Explicación de estadísticas">
-        <strong>Lectura rápida:</strong>
-        Frescura mide qué tan recientes están las zonas.
-        Avance etapa mide cuánto falta para completar el ciclo actual.
-        No son lo mismo, porque claro, la vida necesitaba más de una métrica para trapear un pasillo.
-      </div>
-    `
-  );
-
-  return {
-    health,
-    coverage,
-    status
-  };
 }
 
-/* =============================================================================
- * Tarjeta principal: qué hacer ahora
- * ============================================================================= */
+function renderProgressChip(label, done, target, type) {
+  const complete = Number(done) >= Number(target);
+  return `
+    <span class="weekly-chip ${complete ? "is-ready" : "is-pending"}" data-type="${esc(type)}">
+      ${esc(label)} <strong>${done}/${target}</strong>
+    </span>
+  `;
+}
+
+function renderDailyVisibleBlock(daily) {
+  return `
+    <section class="weekly-panel">
+      <div class="weekly-panel__head">
+        <div>
+          <div class="section-kicker">Rutina diaria visible</div>
+          <h2>${daily.doneCount}/${daily.total} listas hoy</h2>
+        </div>
+        <span class="weekly-status ${daily.completed ? "is-ready" : "is-pending"}">
+          ${daily.completed ? "Completa" : "Pendiente"}
+        </span>
+      </div>
+
+      <div class="visible-routine-grid">
+        ${daily.zones.map(zone => `
+          <article class="visible-zone ${zone.done ? "is-ready" : "is-pending"}" style="--zone-map-color:${esc(zone.mapColor)}">
+            <span class="zone-card__dot" style="background:${esc(zone.mapColor)}"></span>
+            <div>
+              <strong>${esc(zone.zoneName)}</strong>
+              <span>${esc(zone.mapName)} ${zone.done ? "- lista" : "- falta"}</span>
+            </div>
+          </article>
+        `).join("")}
+      </div>
+    </section>
+  `;
+}
 
 function renderXiaomiMiniPreset(xiaomi = {}) {
   const items = [
     ["Modo", xiaomi.modo],
-    ["Succión", xiaomi.succion],
+    ["Succion", xiaomi.succion],
     ["Agua", xiaomi.agua || "Sin agua"],
     ["Trayectoria", xiaomi.trayectoria],
     ["Veces", xiaomi.veces]
   ].filter(([, value]) => value !== undefined && value !== null && value !== "");
 
-  if (!items.length) return "";
-
   return `
     <div class="xiaomi-mini">
-      ${items
-        .map(([label, value]) => `
-          <span class="xiaomi-pill">
-            <strong>${esc(label)}:</strong> ${esc(value)}
-          </span>
-        `)
-        .join("")}
+      ${items.map(([label, value]) => `
+        <span class="xiaomi-pill"><strong>${esc(label)}:</strong> ${esc(value)}</span>
+      `).join("")}
     </div>
   `;
 }
 
-function renderTargetZones(zones = []) {
-  if (!zones.length) {
-    return `<span class="tag is-muted">Sin zonas sugeridas</span>`;
-  }
-
-  return zones
-    .map(zone => `<span class="tag">${esc(zone)}</span>`)
-    .join("");
-}
-
-function renderMainRecommendation(recommendation, cycle) {
-  if (!recommendation) {
+function renderSuggestionBlock(suggestion) {
+  if (!suggestion) {
     return `
       <section class="next-hero is-empty">
         <div class="next-hero__content">
-          <div class="section-kicker">Qué hacer ahora</div>
-          <h2>Todo está cubierto por ahora</h2>
-          <p>
-            No hay una sugerencia principal pendiente. Revisa el historial o haz un repaso manual
-            si hubo mucho movimiento en la sede.
-          </p>
+          <div class="section-kicker">Siguiente accion sugerida</div>
+          <h2>Semana completa</h2>
+          <p>No hay rutina visible ni deuda semanal pendiente.</p>
         </div>
       </section>
     `;
   }
 
-  const reasonClass = getReasonClass(recommendation.reasonId);
-
   return `
-    <section class="next-hero ${reasonClass}">
+    <section class="next-hero is-cycle">
       <div class="next-hero__content">
-        <div class="section-kicker">Qué hacer ahora</div>
-
+        <div class="section-kicker">Siguiente accion sugerida</div>
         <div class="next-hero__head">
           <div>
-            <h2>${esc(recommendation.name || recommendation.mapName || "Siguiente limpieza")}</h2>
-            <p>
-              ${esc(recommendation.reasonLabel || "Sugerencia")}
-              · ${esc(recommendation.cleaningTypeLabel || cycle.currentStage.label)}
-            </p>
+            <h2>${esc(suggestion.mapName || suggestion.name || "Siguiente limpieza")}</h2>
+            <p>${esc(suggestion.reasonLabel)} - ${esc(suggestion.cleaningTypeLabel)}</p>
           </div>
-
-          <div class="next-hero__badge">
-            ${esc(recommendation.reasonLabel || "Sugerencia")}
-          </div>
+          <button type="button" class="btn primary" id="use-weekly-suggestion">
+            Usar esta sugerencia
+          </button>
         </div>
 
         <div class="next-hero__zones">
-          ${renderTargetZones(recommendation.targetZones || [])}
+          ${(suggestion.targetZones || []).map(zone => `<span class="tag">${esc(zone)}</span>`).join("")}
         </div>
 
-        <p class="next-hero__note">
-          ${esc(recommendation.planNote || cycle.weekdayNote || cycle.currentStage.description)}
-        </p>
-
-        ${renderXiaomiMiniPreset(recommendation.xiaomi || cycle.xiaomi)}
+        <p class="next-hero__note">${esc(suggestion.planNote || "")}</p>
+        ${renderXiaomiMiniPreset(suggestion.xiaomi)}
       </div>
 
       <div class="next-hero__meta">
-        <span>${esc(getCycleLabel(cycle))}</span>
-        <strong>${esc(cycle.currentStage.label)}</strong>
-        <span>${cycle.progress.percent}% etapa</span>
+        <span>${esc(suggestion.mapLabel || "")}</span>
+        <strong>${esc(suggestion.cleaningTypeLabel)}</strong>
+        <span>${esc(suggestion.reasonLabel)}</span>
       </div>
     </section>
   `;
 }
 
-/* =============================================================================
- * Sugerencias secundarias
- * ============================================================================= */
+function bindSuggestionButton() {
+  const button = document.getElementById("use-weekly-suggestion");
+  if (!button || !activeSuggestion) return;
 
-function renderSecondaryRecommendation(item, index) {
-  const reasonClass = getReasonClass(item.reasonId);
-
-  return `
-    <article class="next-card ${reasonClass}">
-      <div class="next-card__rank">${index + 1}</div>
-
-      <div class="next-card__body">
-        <div class="next-card__head">
-          <h3>${esc(item.name || item.mapName || `Mapa ${item.id}`)}</h3>
-          <span>${esc(item.reasonLabel || "Sugerencia")}</span>
-        </div>
-
-        <div class="next-card__zones">
-          ${renderTargetZones(item.targetZones || [])}
-        </div>
-
-        <p>${esc(item.planNote || item.reasonDescription || "Sugerencia de seguimiento.")}</p>
-      </div>
-
-      <div class="next-card__side">
-        <strong>${esc(item.cleaningTypeLabel || item.cleaningType || "Limpieza")}</strong>
-        <span>${daysText(item.days)}</span>
-      </div>
-    </article>
-  `;
+  button.addEventListener("click", () => {
+    window.dispatchEvent(new CustomEvent("xiaomi:use-weekly-suggestion", {
+      detail: activeSuggestion
+    }));
+    switchTab("registrar");
+  });
 }
 
-function renderSecondaryRecommendations(items = []) {
-  const limited = items.slice(0, 3);
-
-  if (!limited.length) {
-    return `
-      <div class="empty-soft">
-        No hay sugerencias secundarias relevantes. Qué momento tan raro: una app sin ruido innecesario.
-      </div>
-    `;
-  }
-
-  return limited.map((item, index) => renderSecondaryRecommendation(item, index)).join("");
-}
-
-/* =============================================================================
- * Ciclo
- * ============================================================================= */
-
-function renderCyclePanel(cycle) {
-  const pendingMaps = cycle.progress.pendingMaps || [];
-
-  return `
-    <section class="cycle-panel">
-      <div class="cycle-head">
-        <div>
-          <div class="cycle-kicker">${esc(getCycleLabel(cycle))}</div>
-          <div class="cycle-title">Etapa actual: ${esc(cycle.currentStage.label)}</div>
-        </div>
-
-        <div class="cycle-percent">${cycle.progress.percent}%</div>
-      </div>
-
-      <div class="cycle-track">
-        <div class="cycle-fill" style="width:${cycle.progress.percent}%"></div>
-      </div>
-
-      <div class="cycle-copy">
-        ${esc(cycle.currentStage.description)}
-      </div>
-
-      <div class="cycle-copy">
-        ${esc(cycle.weekdayNote || "")}
-      </div>
-
-      <div class="cycle-pending">
-        ${pendingMaps.length
-          ? pendingMaps
-              .map(map => `
-                <span class="tag">
-                  ${esc(map.name)}: ${map.pendingZones.length}
-                </span>
-              `)
-              .join("")
-          : `<span class="tag">Etapa lista para avanzar</span>`}
-      </div>
-    </section>
-  `;
-}
-
-/* =============================================================================
- * Render de sugerencias
- * ============================================================================= */
-
-function renderNextToClean(nextListElement, sessions) {
+function renderTopBlocks(nextListElement, sessions) {
   if (!nextListElement) return;
 
-  const cycle = getCurrentCycleState(sessions);
-  const recommendations = getCleaningRecommendations(sessions);
-  const mainRecommendation = getNextRecommendedMap(sessions);
-  const byMap = getNextRecommendedByMap(sessions);
-
-  const secondary = byMap
-    .filter(item => Number(item.id) !== Number(mainRecommendation?.id))
-    .slice(0, 3);
+  const { daily, weekly, main } = getNextWeeklyRecommendations(sessions);
+  activeSuggestion = main;
 
   nextListElement.innerHTML = `
-    ${renderMainRecommendation(mainRecommendation, cycle)}
-
-    <div class="dashboard-two-col">
-      <div>
-        <div class="next-section-title">Sugerencias secundarias</div>
-        <div class="next-stack">
-          ${renderSecondaryRecommendations(
-            secondary.length ? secondary : recommendations.topMaps || []
-          )}
+    ${renderDailyVisibleBlock(daily)}
+    ${renderSuggestionBlock(main)}
+    <section class="weekly-panel weekly-summary">
+      <div class="weekly-panel__head">
+        <div>
+          <div class="section-kicker">Cumplimiento semanal</div>
+          <h2>${weekly.completeCount}/${weekly.totalZones} zonas completas</h2>
         </div>
+        <span class="weekly-status ${weekly.completed ? "is-ready" : "is-pending"}">
+          ${weekly.completed ? "Lista" : `${weekly.pendingCount} pendientes`}
+        </span>
       </div>
-
-      <div>
-        <div class="next-section-title">Estado del ciclo</div>
-        ${renderCyclePanel(cycle)}
-      </div>
-    </div>
+    </section>
   `;
+
+  bindSuggestionButton();
 }
 
-/* =============================================================================
- * Filtros de zonas
- * ============================================================================= */
+function filterWeeklyZones(zones = []) {
+  return zones.filter(zone => {
+    if (activeZoneFilter === "all") return true;
+    if (activeZoneFilter === "ready") return zone.completed;
+    if (activeZoneFilter.startsWith("map-")) {
+      return Number(zone.mapId) === Number(activeZoneFilter.replace("map-", ""));
+    }
+    if (activeZoneFilter.startsWith("missing-")) {
+      const type = activeZoneFilter.replace("missing-", "");
+      return (zone.counts[type] || 0) < (zone.targets[type] || 0);
+    }
+    return true;
+  });
+}
 
 function renderMapLegend(mapLegendElement, sessions) {
   if (!mapLegendElement) return;
 
-  const filters = getAvailableZoneFilters();
-  const zones = getAllZoneInfo(sessions);
-  const filteredZones = filterZones(zones, activeZoneFilter, sessions);
+  const ledger = getWeeklyZoneLedger(sessions);
+  const filtered = filterWeeklyZones(ledger.zones);
 
   mapLegendElement.innerHTML = `
     <div class="zone-toolbar">
       <div>
-        <div class="section-kicker">Estado de zonas</div>
-        <h2>Filtrar zonas</h2>
+        <div class="section-kicker">Matriz semanal</div>
+        <h2>Zonas por meta</h2>
       </div>
-
-      <div class="zone-toolbar__count">
-        ${filteredZones.length} de ${zones.length}
-      </div>
+      <div class="zone-toolbar__count">${filtered.length} de ${ledger.zones.length}</div>
     </div>
 
-    <div class="zone-filters" role="tablist" aria-label="Filtros de zonas">
-      ${filters
-        .map(filter => {
-          const active = filter.id === activeZoneFilter ? "is-active" : "";
-
-          return `
-            <button
-              type="button"
-              class="zone-filter ${active}"
-              data-zone-filter="${esc(filter.id)}"
-              aria-pressed="${filter.id === activeZoneFilter ? "true" : "false"}"
-            >
-              ${esc(filter.label)}
-            </button>
-          `;
-        })
-        .join("")}
+    <div class="zone-filters" role="tablist" aria-label="Filtros de matriz semanal">
+      ${WEEKLY_FILTERS.map(filter => `
+        <button
+          type="button"
+          class="zone-filter ${filter.id === activeZoneFilter ? "is-active" : ""}"
+          data-zone-filter="${esc(filter.id)}"
+          aria-pressed="${filter.id === activeZoneFilter ? "true" : "false"}"
+        >
+          ${esc(filter.label)}
+        </button>
+      `).join("")}
     </div>
 
     <div class="map-mini-legend" aria-label="Colores de mapas">
@@ -449,110 +264,64 @@ function renderMapLegend(mapLegendElement, sessions) {
   mapLegendElement.querySelectorAll("[data-zone-filter]").forEach(button => {
     button.addEventListener("click", () => {
       activeZoneFilter = button.dataset.zoneFilter || "all";
-
       const { mapLegend, zoneGrid } = getDashboardElements();
       renderMapLegend(mapLegend, getSessions());
-      renderZones(zoneGrid, getSessions());
+      renderWeeklyMatrix(zoneGrid, getSessions());
     });
   });
 }
 
-/* =============================================================================
- * Grid de zonas
- * ============================================================================= */
-
-function renderZoneCardEnhanced(zone) {
-  const statusClass = getStatusClass(zone.freshnessStatus);
-  const reasonClass = zone.priorityDaily
-    ? "is-priority"
-    : zone.preferredToday
-      ? "is-plan"
-      : zone.pendingInCycle
-        ? "is-cycle"
-        : "is-neutral";
-
-  const mapColor = zone.mapColor || "#ccc";
+function renderZoneCard(zone) {
+  const suggestedType = getRecommendedCleaningTypeForZone(zone);
 
   return `
-    <article
-      class="zone-card ${statusClass} ${reasonClass}"
-      data-map-id="${esc(zone.mapId)}"
-      data-status="${esc(zone.freshnessStatus)}"
-      data-cleaned-today="${zone.cleanedToday ? "true" : "false"}"
-      data-priority="${zone.priorityDaily ? "true" : "false"}"
-      style="--zone-map-color:${esc(mapColor)}"
-    >
+    <article class="zone-card ${zone.completed ? "is-fresh" : "is-urgent"}" style="--zone-map-color:${esc(zone.mapColor)}">
       <div class="zone-card__marker"></div>
-
       <div class="zone-card__head">
         <div>
-          <h3>${esc(zone.name)}</h3>
-          <p>${esc(zone.mapName || zone.mapLabel || "Sin mapa")}</p>
+          <h3>${esc(zone.zoneName)}</h3>
+          <p>${esc(zone.mapName)} - ${esc(zone.mapLabel)}</p>
         </div>
+        <span class="zone-card__dot" style="background:${esc(zone.mapColor)}"></span>
+      </div>
 
-        <span class="zone-card__dot" style="background:${esc(mapColor)}"></span>
+      <div class="weekly-chip-row">
+        ${renderProgressChip("Profundo", zone.counts.profundo, zone.targets.profundo, "profundo")}
+        ${renderProgressChip("Estandar", zone.counts.estandar, zone.targets.estandar, "estandar")}
+        ${renderProgressChip("Rapido", zone.counts.rapido, zone.targets.rapido, "rapido")}
       </div>
 
       <div class="zone-card__status">
-        <strong>${esc(getZoneStatusLabel(zone.name, getSessions()))}</strong>
-        <span>${esc(zone.freshnessLabel)}</span>
-      </div>
-
-      <div class="zone-card__tags">
-        <span class="tag">${esc(getZoneReasonLabel(zone.name, getSessions()))}</span>
-        ${zone.cleanedToday ? `<span class="tag is-success">Hecha hoy</span>` : ""}
-        ${zone.priorityDaily ? `<span class="tag is-primary">Visible</span>` : ""}
-        ${zone.pendingInCycle ? `<span class="tag is-cycle">Ciclo</span>` : ""}
-      </div>
-
-      <div class="zone-card__foot">
-        <span>Último: ${esc(toDateLabel(zone.lastCleaned))}</span>
-        <strong>${daysText(zone.days)}</strong>
+        <strong>${zone.completed ? "Completa esta semana" : "Pendiente esta semana"}</strong>
+        <span>Siguiente: ${esc(zone.completed ? "Sin deuda" : zone.suggestedLabel || suggestedType)}</span>
       </div>
     </article>
   `;
 }
 
-function renderZones(zoneGridElement, sessions) {
+function renderWeeklyMatrix(zoneGridElement, sessions) {
   if (!zoneGridElement) return;
 
-  const allZones = getAllZoneInfo(sessions);
-  const zones = filterZones(allZones, activeZoneFilter, sessions);
+  const ledger = getWeeklyZoneLedger(sessions);
+  const zones = filterWeeklyZones(ledger.zones);
 
   if (!zones.length) {
-    zoneGridElement.innerHTML = `
-      <div class="empty-soft">
-        No hay zonas para este filtro. Al fin un filtro que sí filtra, pequeño milagro doméstico.
-      </div>
-    `;
+    zoneGridElement.innerHTML = `<div class="empty-soft">No hay zonas para este filtro.</div>`;
     return;
   }
 
-  zoneGridElement.innerHTML = zones
-    .map(zone => renderZoneCardEnhanced(zone))
-    .join("");
+  zoneGridElement.innerHTML = zones.map(renderZoneCard).join("");
 }
-
-/* =============================================================================
- * Render principal
- * ============================================================================= */
 
 export function renderDashboardView() {
   const sessions = getSessions();
-  const {
-    load,
-    body,
-    stats,
-    nextList,
-    mapLegend,
-    zoneGrid
-  } = getDashboardElements();
+  const { load, body, stats, nextList, mapLegend, zoneGrid } = getDashboardElements();
 
   hide(load);
   show(body);
 
   renderQuickStats(stats, sessions);
-  renderNextToClean(nextList, sessions);
+  renderTopBlocks(nextList, sessions);
   renderMapLegend(mapLegend, sessions);
-  renderZones(zoneGrid, sessions);
+  renderWeeklyMatrix(zoneGrid, sessions);
 }

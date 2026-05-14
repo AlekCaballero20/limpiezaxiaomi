@@ -11,12 +11,14 @@ import { addSession, getSessions, setSelectedMapId, getSelectedMapId } from "../
 import { toastSuccess, toastError, toastWarning } from "../ui/toast.js";
 import { switchTab } from "../ui/tabs.js";
 import { getCurrentCycleState, getSessionCycleMeta } from "../utils/cleaning-cycle.js";
+import { getNextWeeklyRecommendations } from "../utils/weekly-cleaning.js";
 import { renderDashboardView } from "./dashboard.view.js";
 import { renderHistoryView } from "./history.view.js";
 import { renderStatsView } from "./stats.view.js";
 
 let currentDraft = null;
 let timerInterval = null;
+let activeWeeklySuggestion = null;
 
 function getDraft() {
   return currentDraft;
@@ -109,6 +111,7 @@ export async function setupRegisterView() {
 
   populateMapSelect(elements.mapSelect);
   bindRegisterEvents(elements);
+  bindSuggestionEvents();
 
   const draft = await resolveInitialDraft();
   if (draft) {
@@ -122,7 +125,7 @@ export async function setupRegisterView() {
 }
 
 function applyWeeklyXiaomiDefaults() {
-  const plan = getCurrentCycleState(getSessions());
+  const plan = getNextWeeklyRecommendations(getSessions()).main || getCurrentCycleState(getSessions());
   const hasValue = ["xiaomi-modo", "xiaomi-succion", "xiaomi-agua", "xiaomi-trayectoria", "xiaomi-veces"]
     .some(id => document.getElementById(id)?.value);
   if (!hasValue) setXiaomiValues(plan.xiaomi);
@@ -176,6 +179,7 @@ function bindRegisterEvents(elements) {
 
   mapSelect.addEventListener("change", () => {
     const mapId = mapSelect.value ? Number(mapSelect.value) : null;
+    activeWeeklySuggestion = null;
     setSelectedMapId(mapId);
     renderZoneChecks();
   });
@@ -185,7 +189,35 @@ function bindRegisterEvents(elements) {
   if (cancelButton) cancelButton.addEventListener("click", () => handleCancelDraft());
 }
 
-function renderZoneChecks() {
+function bindSuggestionEvents() {
+  window.addEventListener("xiaomi:use-weekly-suggestion", event => {
+    applyWeeklySuggestion(event.detail);
+  });
+}
+
+function applyWeeklySuggestion(suggestion = {}) {
+  const elements = getRegisterElements();
+  const mapId = Number(suggestion.mapId || suggestion.id);
+
+  if (!elements.mapSelect || !mapId) {
+    toastWarning("La sugerencia no tiene mapa valido");
+    return;
+  }
+
+  activeWeeklySuggestion = suggestion;
+  elements.mapSelect.value = String(mapId);
+  setSelectedMapId(mapId);
+  renderZoneChecks(suggestion.targetZones || []);
+  setXiaomiValues(suggestion.xiaomi || {});
+
+  if (elements.notesInput && !elements.notesInput.value.trim()) {
+    elements.notesInput.value = suggestion.planNote || suggestion.reasonLabel || "";
+  }
+
+  toastSuccess("Sugerencia cargada. Puedes editar zonas y Xiaomi antes de iniciar.");
+}
+
+function renderZoneChecks(selectedZones = null) {
   const { zonesGroup, zoneChecks } = getRegisterElements();
   const selectedMapId = getSelectedMapId();
 
@@ -199,13 +231,21 @@ function renderZoneChecks() {
   if (!map || !zonesGroup || !zoneChecks) return;
 
   zonesGroup.style.display = "block";
-  zoneChecks.innerHTML = map.zones.map(zone => `
-    <label class="zcheck on">
-      <input type="checkbox" value="${zone}" checked>
-      <div class="zbox">OK</div>
+  const selectedSet = Array.isArray(selectedZones)
+    ? new Set(selectedZones)
+    : null;
+
+  zoneChecks.innerHTML = map.zones.map(zone => {
+    const checked = selectedSet ? selectedSet.has(zone) : true;
+
+    return `
+    <label class="zcheck ${checked ? "on" : ""}">
+      <input type="checkbox" value="${zone}" ${checked ? "checked" : ""}>
+      <div class="zbox">${checked ? "OK" : ""}</div>
       <span>${zone}</span>
     </label>
-  `).join("");
+  `;
+  }).join("");
 
   zoneChecks.querySelectorAll(".zcheck").forEach(item => {
     item.addEventListener("click", event => {
@@ -272,7 +312,11 @@ async function handleStart() {
     xiaomiSuccion: xiaomi.succion,
     xiaomiAgua: xiaomi.agua,
     xiaomiTrayectoria: xiaomi.trayectoria,
-    xiaomiVeces: xiaomi.veces
+    xiaomiVeces: xiaomi.veces,
+    recommendedCleaningType: activeWeeklySuggestion?.cleaningType || null,
+    weeklyTargetType: activeWeeklySuggestion?.weeklyTargetType || activeWeeklySuggestion?.cleaningType || null,
+    recommendationReasonId: activeWeeklySuggestion?.reasonId || null,
+    recommendationReasonLabel: activeWeeklySuggestion?.reasonLabel || null
   };
 
   setStartState(true);
@@ -346,7 +390,11 @@ async function handleFinish() {
         agua: xiaomi.agua || null,
         trayectoria: xiaomi.trayectoria || null,
         veces: xiaomi.veces || null
-      }
+      },
+      recommendedCleaningType: draft.recommendedCleaningType || null,
+      weeklyTargetType: draft.weeklyTargetType || null,
+      recommendationReasonId: draft.recommendationReasonId || null,
+      recommendationReasonLabel: draft.recommendationReasonLabel || null
     };
 
     const cycleMeta = getSessionCycleMeta(sessionDraft, getSessions());
@@ -414,6 +462,7 @@ function resetRegisterForm() {
   });
 
   setSelectedMapId(null);
+  activeWeeklySuggestion = null;
 }
 
 function setFinishState(isSaving) {
