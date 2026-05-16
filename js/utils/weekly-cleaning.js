@@ -9,7 +9,7 @@ import { tsToDate } from "./dates.js";
 import { getSessionCleaningType, normalizeZoneName } from "./cleaning-cycle.js";
 
 export const WEEKLY_ZONE_TARGETS = {
-  profundo: 2,
+  profundo: 1,
   estandar: 1,
   rapido: 1
 };
