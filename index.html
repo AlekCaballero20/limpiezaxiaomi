@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
+  <!-- Solo revalidacion del HTML (no "no-store"): los assets se versionan con ?v= -->
+  <meta http-equiv="Cache-Control" content="no-cache" />
   <title>Tracker de Limpieza | Musicala</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
   <link
     href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;700&display=swap"
     rel="stylesheet"
@@ -17,18 +18,16 @@
 
   <script>
     window.APP_BUILD_VERSION = "2026-05-07-cleaning-cycle";
-    (function forceVersionRefresh() {
-      try {
-        const url = new URL(window.location.href);
-        if (url.searchParams.get("v") !== window.APP_BUILD_VERSION) {
-          url.searchParams.set("v", window.APP_BUILD_VERSION);
-          window.location.replace(url.toString());
-        }
-      } catch (error) {
-        console.error("No se pudo forzar refresh de version:", error);
-      }
-    })();
   </script>
+
+  <!-- Precarga en paralelo los modulos criticos (evita la cascada de imports) -->
+  <link rel="modulepreload" href="./js/config/firebase.config.js" />
+  <link rel="modulepreload" href="./js/services/sessions.service.js" />
+  <link rel="modulepreload" href="./js/services/sessions.services.js" />
+  <link rel="modulepreload" href="./js/services/maintenance.service.js" />
+  <link rel="modulepreload" href="./js/state/store.js" />
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js" />
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js" />
 
   <link rel="stylesheet" href="./css/tokens.css?v=2026-05-07-cleaning-cycle" />
   <link rel="stylesheet" href="./css/base.css?v=2026-05-07-cleaning-cycle" />

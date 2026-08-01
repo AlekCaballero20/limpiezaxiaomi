@@ -3,7 +3,7 @@
    Punto de entrada principal de la aplicación
 ───────────────────────────────────────────── */
 
-import { loadSessions } from "./services/sessions.service.js";
+import { loadSessionsCacheFirst } from "./services/sessions.service.js";
 import {
   setSessions,
   resetStore,
@@ -65,39 +65,64 @@ export async function renderApp() {
   await renderMaintenanceView();
 }
 
+/* Re-render de las vistas que dependen de sesiones (sin tocar mantenimiento) */
+function renderSessionViews() {
+  renderDashboardView();
+  renderHistoryView();
+  renderStatsView();
+}
+
 /* ==============================
    DATA
 ============================== */
-async function bootstrapSessions() {
-  const sessions = await loadSessions();
+function handleFreshSessions(sessions) {
   setSessions(sessions);
+  renderSessionViews();
 }
 
 /* ==============================
    INIT
 ============================== */
 async function initApp() {
+  /* Las lecturas de red arrancan a la vez en vez de en cascada.
+     Antes eran 3 round-trips encadenados; ahora es 1 tiempo de espera. */
+  let markSessionsReady = () => {};
+  const sessionsReady = new Promise(resolve => { markSessionsReady = resolve; });
+
   try {
     resetStore();
     showInitialLoadingState();
 
     setupTabs();
-    await setupRegisterView();
 
-    await bootstrapSessions();
+    const sessionsPromise = loadSessionsCacheFirst(handleFreshSessions);
+    const registerPromise = setupRegisterView(sessionsReady);
+
+    const { sessions } = await sessionsPromise;
+    setSessions(sessions);
+    markSessionsReady();
 
     setLoading("dashboard", false);
     setLoading("history", false);
     setLoading("stats", false);
     setLoading("maintenance", false);
 
-    await renderApp();
+    /* Pintamos dashboard/historial/stats de inmediato y dejamos que
+       mantenimiento y el formulario terminen en paralelo. */
+    renderSessionViews();
     hideAllLoaders();
     renderTabs();
+
+    console.info(
+      `[perf] Interfaz lista en ${Math.round(performance.now())} ms`
+    );
+
+    await Promise.all([registerPromise, renderMaintenanceView()]);
 
   } catch (error) {
     console.error("Error inicializando la app:", error);
 
+    markSessionsReady();
     toastError("No se pudieron cargar los datos");
 
     hideAllLoaders();

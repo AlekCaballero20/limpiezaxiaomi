@@ -1,7 +1,7 @@
 import {
   collection,
-  addDoc,
   getDocs,
+  getDocsFromCache,
   getDoc,
   setDoc,
   deleteDoc,
@@ -31,29 +31,70 @@ function getActiveSessionRef() {
 /* ==============================
    READ
 ============================== */
-export async function loadSessions() {
-  const sessionsQuery = query(
-    getSessionsCollection(),
-    orderBy("completedAt", "desc")
-  );
+function getSessionsQuery() {
+  return query(getSessionsCollection(), orderBy("completedAt", "desc"));
+}
 
-  const snapshot = await getDocs(sessionsQuery);
-
+function mapSnapshot(snapshot) {
   return snapshot.docs.map(document => ({
     id: document.id,
     ...document.data()
   }));
 }
 
+export async function loadSessions() {
+  const snapshot = await getDocs(getSessionsQuery());
+  return mapSnapshot(snapshot);
+}
+
+/**
+ * Lectura cache-first: devuelve al instante lo que haya en IndexedDB
+ * y avisa por callback cuando llega la version del servidor.
+ * Si no hay cache (primera visita) hace la lectura normal.
+ */
+export async function loadSessionsCacheFirst(onFreshData) {
+  const sessionsQuery = getSessionsQuery();
+
+  try {
+    const cached = await getDocsFromCache(sessionsQuery);
+
+    if (!cached.empty) {
+      // Refresco en segundo plano: no bloquea el primer render.
+      getDocs(sessionsQuery)
+        .then(fresh => {
+          if (typeof onFreshData !== "function") return;
+          if (fresh.metadata.fromCache) return;
+          onFreshData(mapSnapshot(fresh));
+        })
+        .catch(error => {
+          console.warn("No se pudo refrescar sesiones desde el servidor:", error);
+        });
+
+      return { sessions: mapSnapshot(cached), fromCache: true };
+    }
+  } catch (error) {
+    console.warn("Cache de sesiones no disponible:", error);
+  }
+
+  const snapshot = await getDocs(sessionsQuery);
+  return { sessions: mapSnapshot(snapshot), fromCache: false };
+}
+
 /* ==============================
    CREATE
 ============================== */
-export async function saveSession(sessionData) {
-  const documentRef = await addDoc(getSessionsCollection(), sessionData);
+/**
+ * Escritura optimista: el id se genera en el cliente y el documento
+ * se aplica al cache local de inmediato. Devolvemos sin esperar el ACK
+ * del servidor; `ack` permite reaccionar si la sincronizacion falla.
+ */
+export function saveSession(sessionData) {
+  const documentRef = doc(getSessionsCollection());
+  const ack = setDoc(documentRef, sessionData);
 
   return {
-    id: documentRef.id,
-    ...sessionData
+    session: { id: documentRef.id, ...sessionData },
+    ack
   };
 }
 

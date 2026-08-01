@@ -6,6 +6,7 @@
 
 export {
   loadSessions,
+  loadSessionsCacheFirst,
   saveSession,
   deleteSession,
   loadActiveSession,

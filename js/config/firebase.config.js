@@ -1,5 +1,10 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDJBCVOMPM7xI0VTvC507yuqkKoX1T7utw",
@@ -11,6 +16,21 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+
+/* Cache persistente en IndexedDB:
+   - La segunda carga (y siguientes) lee desde disco: render casi instantaneo.
+   - Las escrituras se aplican local primero y se sincronizan solas. */
+let db;
+
+try {
+  db = initializeFirestore(app, {
+    localCache: persistentLocalCache({
+      tabManager: persistentMultipleTabManager()
+    })
+  });
+} catch (error) {
+  console.warn("Cache persistente no disponible, usando memoria:", error);
+  db = getFirestore(app);
+}
 
 export { app, db };

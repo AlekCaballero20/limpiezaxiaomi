@@ -16,7 +16,10 @@ import {
 
 const maintenanceState = {
   activeFilter: "all",
-  isSaving: false
+  isSaving: false,
+  /* Registros ya leidos de Firestore. Evita una lectura de red
+     por cada click en un filtro o al marcar un item. */
+  records: null
 };
 
 /* =============================================================================
@@ -670,7 +673,7 @@ function renderMaintenanceGroups(items = []) {
  * Render principal
  * ============================================================================= */
 
-export async function renderMaintenanceView() {
+export async function renderMaintenanceView({ forceReload = false } = {}) {
   const { load, body } = getMaintenanceElements();
 
   hide(load);
@@ -678,15 +681,25 @@ export async function renderMaintenanceView() {
 
   if (!body) return;
 
-  body.innerHTML = `
-    <div class="loading">
-      Cargando cuidado de Morchis
-      <span class="spin"></span>
-    </div>
-  `;
+  const needsFetch = forceReload || !maintenanceState.records;
+
+  /* Solo mostramos el spinner cuando de verdad vamos a la red. */
+  if (needsFetch) {
+    body.innerHTML = `
+      <div class="loading">
+        Cargando cuidado de Morchis
+        <span class="spin"></span>
+      </div>
+    `;
+  }
 
   try {
-    const records = await getMaintenanceRecords();
+    const records = needsFetch
+      ? await getMaintenanceRecords()
+      : maintenanceState.records;
+
+    maintenanceState.records = records;
+
     const items = getAllMaintenanceItems(records);
     const summary = getMaintenanceSummary(items);
 
@@ -741,20 +754,32 @@ function setupMaintenanceEvents(container) {
       btn.classList.add("is-loading");
       btn.textContent = "Guardando...";
 
-      try {
-        await markItemDone(itemId);
-        await renderMaintenanceView();
-      } catch (error) {
+      /* Actualizacion optimista: pintamos el nuevo estado al instante
+         y dejamos que Firestore sincronice en segundo plano. */
+      const nowISO = new Date().toISOString();
+      const previousRecords = maintenanceState.records;
+
+      maintenanceState.records = {
+        ...(previousRecords || {}),
+        [itemId]: {
+          lastDone: nowISO,
+          notes: "",
+          doneBy: "",
+          updatedAt: nowISO
+        }
+      };
+
+      renderMaintenanceView();
+      maintenanceState.isSaving = false;
+
+      markItemDone(itemId).catch(error => {
         console.error("Error marcando mantenimiento:", error);
 
-        btn.disabled = false;
-        btn.classList.remove("is-loading");
-        btn.textContent = "✓ Listo";
+        maintenanceState.records = previousRecords;
+        renderMaintenanceView();
 
         window.alert("No se pudo guardar el mantenimiento. Revisa la conexión.");
-      } finally {
-        maintenanceState.isSaving = false;
-      }
+      });
     });
   });
 }

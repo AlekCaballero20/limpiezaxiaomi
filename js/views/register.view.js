@@ -105,7 +105,12 @@ function setXiaomiValues({ modo, succion, agua, trayectoria, veces } = {}) {
   set("xiaomi-veces", veces);
 }
 
-export async function setupRegisterView() {
+/**
+ * @param {Promise<any>} [sessionsReady] Promesa que resuelve cuando el store
+ * ya tiene las sesiones. Permite lanzar esta carga en paralelo con la de
+ * sesiones sin que los valores por defecto se calculen con el store vacio.
+ */
+export async function setupRegisterView(sessionsReady = null) {
   const elements = getRegisterElements();
   if (!elements.mapSelect) return;
 
@@ -118,10 +123,20 @@ export async function setupRegisterView() {
     saveDraft(draft);
     restoreDraftToForm(draft);
     updateSessionUI(draft);
-  } else {
-    applyWeeklyXiaomiDefaults();
-    updateSessionUI(null);
+    return;
   }
+
+  updateSessionUI(null);
+
+  if (sessionsReady) {
+    try {
+      await sessionsReady;
+    } catch (error) {
+      console.warn("No se pudieron cargar sesiones para los valores por defecto:", error);
+    }
+  }
+
+  applyWeeklyXiaomiDefaults();
 }
 
 function applyWeeklyXiaomiDefaults() {
@@ -319,22 +334,21 @@ async function handleStart() {
     recommendationReasonLabel: activeWeeklySuggestion?.reasonLabel || null
   };
 
-  setStartState(true);
-  try {
-    await saveActiveSession(draft);
-    saveDraft(draft);
-    updateSessionUI(draft);
-    toastSuccess("Limpieza iniciada. Disponible en todos tus dispositivos.");
-  } catch (error) {
+  /* La UI cambia de estado al instante; la escritura viaja en segundo plano. */
+  saveDraft(draft);
+  updateSessionUI(draft);
+  toastSuccess("Limpieza iniciada. Disponible en todos tus dispositivos.");
+
+  saveActiveSession(draft).catch(error => {
     console.error("Error iniciando sesion compartida:", error);
-    toastError("No se pudo iniciar la sesion compartida");
-  } finally {
-    setStartState(false);
-  }
+    toastError("No se pudo sincronizar la sesion con tus otros dispositivos");
+  });
 }
 
 async function handleFinish() {
-  const draft = await resolveInitialDraft();
+  /* Usamos el draft en memoria: si existe, evitamos un getDoc extra a Firestore
+     justo antes de guardar. Solo consultamos la nube si no hay nada local. */
+  const draft = getDraft() || await resolveInitialDraft();
   if (!draft) {
     toastError("No hay sesion en curso");
     return;
@@ -398,14 +412,19 @@ async function handleFinish() {
     };
 
     const cycleMeta = getSessionCycleMeta(sessionDraft, getSessions());
-    const newSession = await saveSessionToService({
+
+    /* Escritura optimista: el id se genera local y Firestore sincroniza solo.
+       La UI no espera el ACK del servidor. */
+    const { session: newSession, ack } = saveSessionToService({
       ...sessionDraft,
       ...cycleMeta
     });
 
     addSession(newSession);
     clearDraft();
-    await clearActiveSession();
+
+    const clearAck = clearActiveSession();
+
     updateSessionUI(null);
     resetRegisterForm();
     renderDashboardView();
@@ -414,6 +433,12 @@ async function handleFinish() {
 
     toastSuccess(`Sesion guardada - ${durationMinutes} min`);
     setTimeout(() => switchTab("dashboard"), 600);
+
+    /* Si la sincronizacion falla despues, avisamos sin bloquear el flujo. */
+    Promise.all([ack, clearAck]).catch(error => {
+      console.error("Error sincronizando la sesion con el servidor:", error);
+      toastError("La sesion se guardo local, pero fallo la sincronizacion");
+    });
   } catch (error) {
     console.error("Error guardando sesion:", error);
     toastError("Error al guardar");
