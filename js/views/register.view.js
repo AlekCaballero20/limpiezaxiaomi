@@ -12,9 +12,7 @@ import { toastSuccess, toastError, toastWarning } from "../ui/toast.js";
 import { switchTab } from "../ui/tabs.js";
 import { getCurrentCycleState, getSessionCycleMeta } from "../utils/cleaning-cycle.js";
 import { getNextWeeklyRecommendations } from "../utils/weekly-cleaning.js";
-import { renderDashboardView } from "./dashboard.view.js";
-import { renderHistoryView } from "./history.view.js";
-import { renderStatsView } from "./stats.view.js";
+import { invalidateViews } from "../ui/view-registry.js";
 
 let currentDraft = null;
 let timerInterval = null;
@@ -427,9 +425,9 @@ async function handleFinish() {
 
     updateSessionUI(null);
     resetRegisterForm();
-    renderDashboardView();
-    renderHistoryView();
-    renderStatsView();
+    /* Se marcan como pendientes; la de destino se pinta al llegar a ella.
+       Asi guardar no bloquea con el render completo del historial. */
+    invalidateViews(["dashboard", "historial", "estadisticas"]);
 
     toastSuccess(`Sesion guardada - ${durationMinutes} min`);
     setTimeout(() => switchTab("dashboard"), 600);

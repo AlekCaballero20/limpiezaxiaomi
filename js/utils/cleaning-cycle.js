@@ -328,10 +328,51 @@ export function getCurrentStage(sessions = [], date = new Date()) {
   return state.currentStage;
 }
 
+/* Memoria del estado de ciclo.
+   getZoneInfo() lo pide una vez por zona, asi que un render de
+   estadisticas llegaba a recalcularlo unas 60 veces con el mismo
+   resultado. El calculo solo depende de las sesiones y del dia
+   calendario (no de la hora), asi que se cachea por esas dos claves.
+   La longitud entra en la clave porque addSession() muta el array
+   en sitio y la referencia no cambia. */
+const cycleStateCache = new WeakMap();
+
 export function getCurrentCycleState(sessions = [], date = new Date()) {
   const parsedDate = tsToDate(date) || new Date(date);
   const safeDate = Number.isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
 
+  const dayKey = new Date(
+    safeDate.getFullYear(),
+    safeDate.getMonth(),
+    safeDate.getDate()
+  ).getTime();
+
+  const canCache = Array.isArray(sessions);
+  const cacheKey = `${dayKey}:${canCache ? sessions.length : 0}`;
+
+  if (canCache) {
+    let perSessions = cycleStateCache.get(sessions);
+
+    if (perSessions && perSessions.has(cacheKey)) {
+      return perSessions.get(cacheKey);
+    }
+
+    const state = computeCurrentCycleState(sessions, safeDate);
+
+    if (!perSessions) {
+      perSessions = new Map();
+      cycleStateCache.set(sessions, perSessions);
+    }
+
+    perSessions.set(cacheKey, state);
+
+    return state;
+  }
+
+  return computeCurrentCycleState(sessions, safeDate);
+}
+
+function computeCurrentCycleState(sessions, safeDate) {
   const replay = replayCycle(sessions);
   const progress = summarizeProgress(replay.progress);
   const dailyStrategy = getDailyCleaningStrategy(safeDate);
@@ -727,5 +768,104 @@ export function getZoneSuggestionMeta(zoneName, sessions = [], date = new Date()
         info.days === null ||
         info.days >= 3
       )
+  };
+}
+/* =============================================================================
+ * Metadatos de ciclo: version rapida
+ *
+ * getSessionCycleMeta() recorre todas las sesiones anteriores, asi que
+ * calcularlo para cada sesion del historial cuesta O(n^2). Estas dos ayudas
+ * evitan la mayor parte de ese trabajo:
+ *
+ *  - Las sesiones guardadas por la app ya llevan los metadatos persistidos:
+ *    en ese caso no hay nada que inferir.
+ *  - Para las antiguas, el resultado se memoiza por objeto de sesion, de modo
+ *    que filtrar o volver a pintar el historial no lo recalcula.
+ * ============================================================================= */
+
+const PERSISTED_META_FIELDS = [
+  "cleaningType",
+  "cleaningTypeLabel",
+  "countsForCycle",
+  "recommendationSource",
+  "cycleStage",
+  "cycleStatusLabel"
+];
+
+export function hasPersistedCycleMeta(session) {
+  if (!session || typeof session !== "object") return false;
+
+  return PERSISTED_META_FIELDS.every(field => {
+    return session[field] !== undefined && session[field] !== null;
+  });
+}
+
+const cycleMetaCache = new WeakMap();
+
+/**
+ * Igual que getSessionCycleMeta, pero sin recalcular lo que ya se sabe.
+ *
+ * @param {object} session
+ * @param {Array|Function} sessionsBefore Array de sesiones anteriores, o una
+ *   funcion que lo devuelve. Si es funcion solo se invoca cuando hace falta
+ *   inferir de verdad, para no construir la lista en vano.
+ */
+export function getSessionCycleMetaCached(session, sessionsBefore = []) {
+  if (!session || typeof session !== "object") {
+    return getSessionCycleMeta(session, resolveSessionsBefore(sessionsBefore));
+  }
+
+  /* Ya trae todos los campos: la propia sesion sirve como metadato.
+     Los consumidores leen `session.X || meta.X`, asi que el resultado
+     es identico al inferido. */
+  if (hasPersistedCycleMeta(session)) return session;
+
+  const cached = cycleMetaCache.get(session);
+  if (cached) return cached;
+
+  const meta = getSessionCycleMeta(session, resolveSessionsBefore(sessionsBefore));
+  cycleMetaCache.set(session, meta);
+
+  return meta;
+}
+
+function resolveSessionsBefore(sessionsBefore) {
+  return typeof sessionsBefore === "function" ? sessionsBefore() : (sessionsBefore || []);
+}
+
+/**
+ * Construye un resolutor de "sesiones anteriores a esta" que ordena una sola
+ * vez y luego corta por busqueda binaria, en vez de reordenar la lista entera
+ * por cada sesion. Equivale a filtrar por `fecha < fecha de la sesion`.
+ */
+export function createSessionsBeforeResolver(sessions = [], getDate) {
+  const toTime = session => {
+    const date = getDate ? getDate(session) : sessionDate(session);
+    const time = date instanceof Date ? date.getTime() : NaN;
+    return Number.isNaN(time) ? 0 : time;
+  };
+
+  const sorted = [...sessions].sort((a, b) => toTime(a) - toTime(b));
+  const times = sorted.map(toTime);
+  const cache = new Map();
+
+  return function getSessionsBefore(session) {
+    const time = toTime(session);
+
+    if (cache.has(time)) return cache.get(time);
+
+    let low = 0;
+    let high = times.length;
+
+    while (low < high) {
+      const mid = (low + high) >> 1;
+      if (times[mid] < time) low = mid + 1;
+      else high = mid;
+    }
+
+    const result = sorted.slice(0, low);
+    cache.set(time, result);
+
+    return result;
   };
 }

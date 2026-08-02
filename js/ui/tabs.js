@@ -4,6 +4,9 @@
 ───────────────────────────────────────────── */
 
 import { setActiveTab, getActiveTab } from "../state/store.js";
+import { renderView, setVisibleTabResolver } from "./view-registry.js";
+
+setVisibleTabResolver(getActiveTab);
 
 /* ==============================
    HELPERS INTERNOS
@@ -67,6 +70,10 @@ export function switchTab(tabName) {
 
   setActiveTab(tabName);
   renderTabs();
+
+  /* La pestaña se muestra al instante; su contenido se pinta aqui la
+     primera vez (o cuando quedo pendiente por un cambio de datos). */
+  renderView(tabName);
 
   if (window.location.hash !== `#${tabName}`) {
     window.location.hash = tabName;

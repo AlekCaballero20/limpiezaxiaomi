@@ -7,12 +7,13 @@ import { getSessions, removeSession } from "../state/store.js";
 import { deleteSession as deleteSessionFromService } from "../services/sessions.service.js";
 import { renderSessionCard, renderEmptyState } from "../ui/cards.js";
 import { toastSuccess, toastError } from "../ui/toast.js";
-import { renderDashboardView } from "./dashboard.view.js";
-import { renderStatsView } from "./stats.view.js";
+import { invalidateViews } from "../ui/view-registry.js";
 import { tsToDate } from "../utils/dates.js";
 import {
   getSessionCleaningType,
-  getSessionCycleMeta
+  getSessionCycleMetaCached,
+  hasPersistedCycleMeta,
+  createSessionsBeforeResolver
 } from "../utils/cleaning-cycle.js";
 
 /* =============================================================================
@@ -152,17 +153,19 @@ function sortSessionsAsc(sessions = []) {
   });
 }
 
+/* Resolutor de "sesiones anteriores" para el render en curso.
+   Antes se reordenaba la lista completa por cada sesion (O(n^2 log n));
+   ahora se ordena una vez y se corta por busqueda binaria. */
+let sessionsBeforeResolver = null;
+
+function prepareSessionsBefore(allSessions = []) {
+  sessionsBeforeResolver = createSessionsBeforeResolver(allSessions, getSessionDate);
+}
+
 function getSessionsBefore(session = {}, allSessions = []) {
-  const currentDate = getSessionDate(session);
-  const currentTime = currentDate.getTime();
+  if (!sessionsBeforeResolver) prepareSessionsBefore(allSessions);
 
-  return sortSessionsAsc(allSessions).filter(candidate => {
-    if (candidate.id === session.id) return false;
-
-    const candidateTime = getSessionDate(candidate).getTime();
-
-    return candidateTime < currentTime;
-  });
+  return sessionsBeforeResolver(session);
 }
 
 function getSessionText(session = {}) {
@@ -179,24 +182,24 @@ function getSessionText(session = {}) {
     .join(" ");
 }
 
+/* Ojo con el orden: primero el campo ya guardado en la sesion, y solo si
+   falta se infiere. Antes se inferia siempre y luego se descartaba. */
 function getSessionSource(session = {}, sessionsBefore = []) {
-  const inferredMeta = getSessionCycleMeta(session, sessionsBefore);
+  if (session.recommendationSource) return session.recommendationSource;
 
-  return (
-    session.recommendationSource ||
-    inferredMeta.recommendationSource ||
-    "manual"
-  );
+  const inferredMeta = getSessionCycleMetaCached(session, sessionsBefore);
+
+  return inferredMeta.recommendationSource || "manual";
 }
 
 function getSessionCountsForCycle(session = {}, sessionsBefore = []) {
-  const inferredMeta = getSessionCycleMeta(session, sessionsBefore);
+  const persisted = session.countsForCycle ?? session.countsForStage;
 
-  return Boolean(
-    session.countsForCycle ??
-    session.countsForStage ??
-    inferredMeta.countsForCycle
-  );
+  if (persisted !== undefined && persisted !== null) return Boolean(persisted);
+
+  const inferredMeta = getSessionCycleMetaCached(session, sessionsBefore);
+
+  return Boolean(inferredMeta.countsForCycle);
 }
 
 /* =============================================================================
@@ -222,38 +225,44 @@ function isSessionInsidePeriod(session = {}, period = "all") {
 function filterSessions(sessions = []) {
   const search = normalizeText(historyState.search);
 
+  const needsSource = historyState.source !== "all";
+  const needsType = historyState.type !== "all";
+
   return sessions.filter(session => {
-    const sessionsBefore = getSessionsBefore(session, sessions);
-    const cleaningType = getSessionCleaningType(session);
-    const source = getSessionSource(session, sessionsBefore);
-    const countsForCycle = getSessionCountsForCycle(session, sessionsBefore);
+    /* Los filtros baratos primero: si uno descarta la sesion, nos ahorramos
+       inferir metadatos de ciclo, que es lo caro. */
+    const matchesPeriod = isSessionInsidePeriod(session, historyState.period);
+    if (!matchesPeriod) return false;
 
     const matchesSearch = search
       ? normalizeText(getSessionText(session)).includes(search)
       : true;
+    if (!matchesSearch) return false;
 
-    const matchesType =
-      historyState.type === "all" ||
-      normalizeText(cleaningType) === normalizeText(historyState.type);
+    if (needsType) {
+      const cleaningType = getSessionCleaningType(session);
 
-    const matchesSource =
-      historyState.source === "all" ||
-      (
-        historyState.source === "recommended" &&
-        normalizeText(source) === "recomendada"
-      ) ||
-      (
-        historyState.source === "counts" &&
-        countsForCycle
-      ) ||
-      (
-        historyState.source === "manual" &&
-        !countsForCycle
-      );
+      if (normalizeText(cleaningType) !== normalizeText(historyState.type)) {
+        return false;
+      }
+    }
 
-    const matchesPeriod = isSessionInsidePeriod(session, historyState.period);
+    if (!needsSource) return true;
 
-    return matchesSearch && matchesType && matchesSource && matchesPeriod;
+    /* Solo aqui hace falta mirar el historial anterior, y solo para las
+       sesiones antiguas que no guardaron sus metadatos. */
+    const sessionsBefore = () => getSessionsBefore(session, sessions);
+
+    if (historyState.source === "recommended") {
+      return normalizeText(getSessionSource(session, sessionsBefore)) === "recomendada";
+    }
+
+    const countsForCycle = getSessionCountsForCycle(session, sessionsBefore);
+
+    if (historyState.source === "counts") return countsForCycle;
+    if (historyState.source === "manual") return !countsForCycle;
+
+    return true;
   });
 }
 
@@ -513,8 +522,12 @@ function renderHistoryGroups(sessions = [], allSessions = []) {
           <div class="history-day__list">
             ${group.sessions
               .map(session => {
-                const sessionsBefore = getSessionsBefore(session, allSessions);
-                return renderSessionCard(session, sessionsBefore);
+                /* Perezoso: la tarjeta solo resuelve el historial anterior
+                   si la sesion no trae ya sus metadatos guardados. */
+                return renderSessionCard(
+                  session,
+                  () => getSessionsBefore(session, allSessions)
+                );
               })
               .join("")}
           </div>
@@ -551,9 +564,10 @@ function setupDeleteButtons(container) {
         await deleteSessionFromService(sessionId);
         removeSession(sessionId);
 
+        /* Repinta el historial (visible) y deja dashboard y estadisticas
+           pendientes para cuando se abran. */
         renderHistoryView();
-        renderDashboardView();
-        renderStatsView();
+        invalidateViews(["dashboard", "estadisticas"]);
 
         toastSuccess("Sesión eliminada");
       } catch (error) {
@@ -573,6 +587,9 @@ function setupDeleteButtons(container) {
 export function renderHistoryView() {
   const sessions = sortSessionsDesc(getSessions());
   const { load, body } = getHistoryElements();
+
+  /* Un solo ordenamiento por render, compartido por filtros y tarjetas. */
+  prepareSessionsBefore(sessions);
 
   hide(load);
   show(body);

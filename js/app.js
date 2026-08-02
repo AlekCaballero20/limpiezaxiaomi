@@ -11,6 +11,11 @@ import {
 } from "./state/store.js";
 
 import { renderTabs, setupTabs } from "./ui/tabs.js";
+import {
+  registerView,
+  renderVisibleView,
+  refreshViews
+} from "./ui/view-registry.js";
 import { toastError } from "./ui/toast.js";
 
 import { setupRegisterView } from "./views/register.view.js";
@@ -58,18 +63,17 @@ function hideAllLoaders() {
 /* ==============================
    RENDER GLOBAL
 ============================== */
-export async function renderApp() {
-  renderDashboardView();
-  renderHistoryView();
-  renderStatsView();
-  await renderMaintenanceView();
+function registerViews() {
+  registerView("dashboard", renderDashboardView);
+  registerView("historial", renderHistoryView);
+  registerView("estadisticas", renderStatsView);
+  registerView("mantenimiento", renderMaintenanceView);
 }
 
-/* Re-render de las vistas que dependen de sesiones (sin tocar mantenimiento) */
-function renderSessionViews() {
-  renderDashboardView();
-  renderHistoryView();
-  renderStatsView();
+/* Repinta todo lo que depende de sesiones, pero solo de verdad la
+   pestaña visible; el resto queda pendiente hasta que se entre en ella. */
+export function refreshSessionViews() {
+  return refreshViews(["dashboard", "historial", "estadisticas"]);
 }
 
 /* ==============================
@@ -77,7 +81,7 @@ function renderSessionViews() {
 ============================== */
 function handleFreshSessions(sessions) {
   setSessions(sessions);
-  renderSessionViews();
+  refreshSessionViews();
 }
 
 /* ==============================
@@ -93,6 +97,7 @@ async function initApp() {
     resetStore();
     showInitialLoadingState();
 
+    registerViews();
     setupTabs();
 
     const sessionsPromise = loadSessionsCacheFirst(handleFreshSessions);
@@ -107,17 +112,17 @@ async function initApp() {
     setLoading("stats", false);
     setLoading("maintenance", false);
 
-    /* Pintamos dashboard/historial/stats de inmediato y dejamos que
-       mantenimiento y el formulario terminen en paralelo. */
-    renderSessionViews();
+    /* Solo se pinta la pestaña visible. Historial y Estadisticas recorren
+       todo el historial y cuestan segundos: se dejan para cuando se abran. */
     hideAllLoaders();
     renderTabs();
+    await renderVisibleView();
 
     console.info(
       `[perf] Interfaz lista en ${Math.round(performance.now())} ms`
     );
 
-    await Promise.all([registerPromise, renderMaintenanceView()]);
+    await registerPromise;
 
   } catch (error) {
     console.error("Error inicializando la app:", error);

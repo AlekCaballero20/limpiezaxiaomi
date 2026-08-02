@@ -8,7 +8,7 @@ import { formatDate } from "../utils/dates.js";
 import { getMapOfZone } from "../config/maps.config.js";
 import {
   getSessionCleaningType,
-  getSessionCycleMeta
+  getSessionCycleMetaCached
 } from "../utils/cleaning-cycle.js";
 import {
   getCleaningTypeLabel,
@@ -338,7 +338,10 @@ export function renderZoneCard(zoneInput, daysInput = null) {
  * ============================================================================= */
 
 export function renderSessionCard(session, sessionsBefore = []) {
-  const inferredMeta = getSessionCycleMeta(session, sessionsBefore);
+  /* Version cacheada: si la sesion ya trae sus metadatos de ciclo guardados
+     no se recorre el historial anterior. `sessionsBefore` puede ser una
+     funcion perezosa, que solo se evalua si de verdad hay que inferir. */
+  const inferredMeta = getSessionCycleMetaCached(session, sessionsBefore);
 
   const cleaningType =
     session.cleaningType ||
